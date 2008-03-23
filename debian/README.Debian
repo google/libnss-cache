@@ -1,0 +1,12 @@
+libnss-cache for Debian
+-----------------------
+
+This library is a simple shim around the libc file support for nss,
+namely /etc/passwd and /etc/group and so forth.  It changes the file
+name to append a .cache, e.g. /etc/passwd.cache, in order to define
+a second set of files that the libc nss layer will merge for you.
+
+Supported maps are passwd, group, and shadow.  In /etc/nsswitch.conf
+simply include "cache" in the map you want to enable.
+
+ -- V <projectvoltron@gmail.com>, Wed, 22 Mar 2008 20:24:00 -0700

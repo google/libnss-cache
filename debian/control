@@ -1,0 +1,14 @@
+Source: libnss-cache
+Priority: optional
+Maintainer: V <projectvoltron@gmail.com>
+Build-Depends: debhelper (>= 4.0.0)
+Standards-Version: 3.6.2
+Section: libs
+
+Package: libnss-cache
+Section: libs
+Architecture: any
+Depends: libc6, ${shlibs:Depends}, ${misc:Depends}
+Description: A lightweight shim around libc nss file support.
+ libnss-cache provides support for /etc/passwd.cache, /etc/shadow.cache
+ and /etc/group.cache.
