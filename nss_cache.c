@@ -1,4 +1,4 @@
-/*Copyright 2007 Google Inc.
+/* Copyright 2007 Google Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -27,17 +27,21 @@
 #include <sys/types.h>
 #include <nss.h>
 #include <errno.h>
-#include <pthread.h>
 #include <string.h>
 
-static FILE *p_file,*g_file,*s_file;
+// Locking implementation: use pthreads.
+#include <pthread.h>
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+#define NSS_CACHE_LOCK()    do { pthread_mutex_lock(&mutex); } while (0)
+#define NSS_CACHE_UNLOCK()  do { pthread_mutex_unlock(&mutex); } while (0)
+
+static FILE *p_file, *g_file, *s_file;
 
 #ifdef DEBUG
 #undef DEBUG
-#define DEBUG(fmt, args...) fprintf(stderr, fmt, ##args)
+#define DEBUG(fmt, args...)  do { fprintf(stderr, fmt, ##args); } while (0)
 #else
-#define DEBUG(fmt, ...)
+#define DEBUG(fmt, ...)      do { } while (0)
 #endif
 
 /* Common return code routine for all *ent_r_locked functions.
@@ -45,10 +49,10 @@ static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
  * so that our caller knows to try again with a bigger buffer.
  */
 
-static inline enum nss_status _nss_cache_ent_bad_return_code(int errnop) {
+static inline enum nss_status _nss_cache_ent_bad_return_code(int errnoval) {
   enum nss_status ret;
 
-  switch (errnop) {
+  switch (errnoval) {
     case ERANGE:
       DEBUG("ERANGE: Try again with a bigger buffer\n");
       ret = NSS_STATUS_TRYAGAIN;
@@ -68,7 +72,7 @@ static inline enum nss_status _nss_cache_ent_bad_return_code(int errnop) {
 // _nss_cache_setpwent_locked()
 // Internal setup routine
 
-static enum nss_status _nss_cache_setpwent_locked() {
+static enum nss_status _nss_cache_setpwent_locked(void) {
 
   DEBUG("Opening passwd.cache\n");
   p_file = fopen("/etc/passwd.cache", "r");
@@ -82,19 +86,20 @@ static enum nss_status _nss_cache_setpwent_locked() {
 
 // _nss_cache_setpwent()
 // Called by NSS to open the passwd file
+// 'stayopen' parameter is ignored.
 
-enum nss_status _nss_cache_setpwent() {
+enum nss_status _nss_cache_setpwent(int stayopen) {
   enum nss_status ret;
-  pthread_mutex_lock(&mutex);
+  NSS_CACHE_LOCK();
   ret = _nss_cache_setpwent_locked();
-  pthread_mutex_unlock(&mutex);
+  NSS_CACHE_UNLOCK();
   return ret;
 }
 
 // _nss_cache_endpwent_locked()
 // Internal close routine
 
-static enum nss_status _nss_cache_endpwent_locked() {
+static enum nss_status _nss_cache_endpwent_locked(void) {
 
   DEBUG("Closing passwd.cache\n");
   if (p_file) {
@@ -107,11 +112,11 @@ static enum nss_status _nss_cache_endpwent_locked() {
 // _nss_cache_endpwent()
 // Called by NSS to close the passwd file
 
-enum nss_status _nss_cache_endpwent() {
+enum nss_status _nss_cache_endpwent(void) {
   enum nss_status ret;
-  pthread_mutex_lock(&mutex);
+  NSS_CACHE_LOCK();
   ret = _nss_cache_endpwent_locked();
-  pthread_mutex_unlock(&mutex);
+  NSS_CACHE_UNLOCK();
   return ret;
 }
 
@@ -121,15 +126,20 @@ enum nss_status _nss_cache_endpwent() {
 static enum nss_status _nss_cache_getpwent_r_locked(struct passwd *result,
                                                    char *buffer, size_t buflen,
                                                    int *errnop) {
+  enum nss_status ret = NSS_STATUS_SUCCESS;
 
-  enum nss_status ret;
+  if (p_file == NULL) {
+    DEBUG("p_file == NULL, going to setpwent\n");
+    ret = _nss_cache_setpwent_locked();
+  }
 
-  if (fgetpwent_r(p_file, result, buffer, buflen, &result) == 0) {
-    DEBUG("Returning user %d:%s\n", result->pw_uid, result->pw_name);
-    ret = NSS_STATUS_SUCCESS;
-  } else {
-    *errnop = errno;
-    ret = _nss_cache_ent_bad_return_code(*errnop);
+  if (ret == NSS_STATUS_SUCCESS) {
+    if (fgetpwent_r(p_file, result, buffer, buflen, &result) == 0) {
+      DEBUG("Returning user %d:%s\n", result->pw_uid, result->pw_name);
+    } else {
+      *errnop = errno;
+      ret = _nss_cache_ent_bad_return_code(*errnop);
+    }
   }
 
   return ret;
@@ -142,9 +152,9 @@ enum nss_status _nss_cache_getpwent_r(struct passwd *result,
                                      char *buffer, size_t buflen,
                                      int *errnop) {
   enum nss_status ret;
-  pthread_mutex_lock(&mutex);
+  NSS_CACHE_LOCK();
   ret = _nss_cache_getpwent_r_locked(result, buffer, buflen, errnop);
-  pthread_mutex_unlock(&mutex);
+  NSS_CACHE_UNLOCK();
   return ret;
 }
 
@@ -157,7 +167,7 @@ enum nss_status _nss_cache_getpwuid_r(uid_t uid, struct passwd *result,
 
   enum nss_status ret;
 
-  pthread_mutex_lock(&mutex);
+  NSS_CACHE_LOCK();
   ret = _nss_cache_setpwent_locked();
   DEBUG("Looking for uid %d\n", uid);
 
@@ -170,7 +180,7 @@ enum nss_status _nss_cache_getpwuid_r(uid_t uid, struct passwd *result,
   }
 
   _nss_cache_endpwent_locked();
-  pthread_mutex_unlock(&mutex);
+  NSS_CACHE_UNLOCK();
 
   return ret;
 }
@@ -184,7 +194,7 @@ enum nss_status _nss_cache_getpwnam_r(const char *name, struct passwd *result,
 
   enum nss_status ret;
 
-  pthread_mutex_lock(&mutex);
+  NSS_CACHE_LOCK();
   ret = _nss_cache_setpwent_locked();
   DEBUG("Looking for user %s\n", name);
 
@@ -197,7 +207,7 @@ enum nss_status _nss_cache_getpwnam_r(const char *name, struct passwd *result,
   }
 
   _nss_cache_endpwent_locked();
-  pthread_mutex_unlock(&mutex);
+  NSS_CACHE_UNLOCK();
 
   return ret;
 }
@@ -209,7 +219,7 @@ enum nss_status _nss_cache_getpwnam_r(const char *name, struct passwd *result,
 // _nss_cache_setgrent_locked()
 // Internal setup routine
 
-static enum nss_status _nss_cache_setgrent_locked() {
+static enum nss_status _nss_cache_setgrent_locked(void) {
 
   DEBUG("Opening group.cache\n");
   g_file = fopen("/etc/group.cache", "r");
@@ -223,19 +233,20 @@ static enum nss_status _nss_cache_setgrent_locked() {
 
 // _nss_cache_setgrent()
 // Called by NSS to open the group file
+// 'stayopen' parameter is ignored.
 
-enum nss_status _nss_cache_setgrent() {
+enum nss_status _nss_cache_setgrent(int stayopen) {
   enum nss_status ret;
-  pthread_mutex_lock(&mutex);
+  NSS_CACHE_LOCK();
   ret = _nss_cache_setgrent_locked();
-  pthread_mutex_unlock(&mutex);
+  NSS_CACHE_UNLOCK();
   return ret;
 }
 
 // _nss_cache_endgrent_locked()
 // Internal close routine
 
-static enum nss_status _nss_cache_endgrent_locked() {
+static enum nss_status _nss_cache_endgrent_locked(void) {
 
   DEBUG("Closing group.cache\n");
   if (g_file) {
@@ -248,38 +259,45 @@ static enum nss_status _nss_cache_endgrent_locked() {
 // _nss_cache_endgrent()
 // Called by NSS to close the group file
 
-enum nss_status _nss_cache_endgrent() {
+enum nss_status _nss_cache_endgrent(void) {
   enum nss_status ret;
-  pthread_mutex_lock(&mutex);
+  NSS_CACHE_LOCK();
   ret = _nss_cache_endgrent_locked();
-  pthread_mutex_unlock(&mutex);
+  NSS_CACHE_UNLOCK();
   return ret;
 }
 
 // _nss_cache_getgrent_r_locked()
 // Called internally to return the next entry from the group file
 
-static enum nss_status
-_nss_cache_getgrent_r_locked(struct group * result, char * buffer,
-                             size_t buflen, int * errnop)
-{
-  enum nss_status ret;
-  fpos_t position;
+static enum nss_status _nss_cache_getgrent_r_locked(struct group *result,
+                                                   char *buffer, size_t buflen,
+                                                   int *errnop) {
+  enum nss_status ret = NSS_STATUS_SUCCESS;
 
-  fgetpos(g_file, &position);
-  if (fgetgrent_r(g_file, result, buffer, buflen, &result) == 0) {
-    DEBUG("Returning group %s (%d)\n", result->gr_name, result->gr_gid);
-    ret = NSS_STATUS_SUCCESS;
-  } else {
-    /* Rewind back to where we were just before, otherwise the data read into
-     * the buffer is probably going to be lost because there's no guarantee
-     * that the caller is going to have preserved the line we just read.
-     * Note that glibc's nss/nss_files/files-XXX.c does something similar in
-     * CONCAT(_nss_files_get,ENTNAME_r) (around line 242 in glibc 2.4 sources).
-     */
-    fsetpos(g_file, &position);
-    *errnop = errno;
-    ret = _nss_cache_ent_bad_return_code(*errnop);
+  if (g_file == NULL) {
+    DEBUG("g_file == NULL, going to setgrent\n");
+    ret = _nss_cache_setgrent_locked();
+  }
+
+  if (ret == NSS_STATUS_SUCCESS) {
+    fpos_t position;
+
+    fgetpos(g_file, &position);
+    if (fgetgrent_r(g_file, result, buffer, buflen, &result) == 0) {
+      DEBUG("Returning group %s (%d)\n", result->gr_name, result->gr_gid);
+    } else {
+      /* Rewind back to where we were just before, otherwise the data read
+       * into the buffer is probably going to be lost because there's no
+       * guarantee that the caller is going to have preserved the line we
+       * just read.  Note that glibc's nss/nss_files/files-XXX.c does
+       * something similar in CONCAT(_nss_files_get,ENTNAME_r) (around
+       * line 242 in glibc 2.4 sources).
+       */
+      fsetpos(g_file, &position);
+      *errnop = errno;
+      ret = _nss_cache_ent_bad_return_code(*errnop);
+    }
   }
 
   return ret;
@@ -292,9 +310,9 @@ enum nss_status _nss_cache_getgrent_r(struct group *result,
                                      char *buffer, size_t buflen,
                                      int *errnop) {
   enum nss_status ret;
-  pthread_mutex_lock(&mutex);
+  NSS_CACHE_LOCK();
   ret = _nss_cache_getgrent_r_locked(result, buffer, buflen, errnop);
-  pthread_mutex_unlock(&mutex);
+  NSS_CACHE_UNLOCK();
   return ret;
 }
 
@@ -307,7 +325,7 @@ enum nss_status _nss_cache_getgrgid_r(gid_t gid, struct group *result,
 
   enum nss_status ret;
 
-  pthread_mutex_lock(&mutex);
+  NSS_CACHE_LOCK();
   ret = _nss_cache_setgrent_locked();
   DEBUG("Looking for gid %d\n", gid);
 
@@ -320,7 +338,7 @@ enum nss_status _nss_cache_getgrgid_r(gid_t gid, struct group *result,
   }
 
   _nss_cache_endgrent_locked();
-  pthread_mutex_unlock(&mutex);
+  NSS_CACHE_UNLOCK();
 
   return ret;
 }
@@ -334,7 +352,7 @@ enum nss_status _nss_cache_getgrnam_r(const char *name, struct group *result,
 
   enum nss_status ret;
 
-  pthread_mutex_lock(&mutex);
+  NSS_CACHE_LOCK();
   ret = _nss_cache_setgrent_locked();
   DEBUG("Looking for group %s\n", name);
 
@@ -347,7 +365,7 @@ enum nss_status _nss_cache_getgrnam_r(const char *name, struct group *result,
   }
 
   _nss_cache_endgrent_locked();
-  pthread_mutex_unlock(&mutex);
+  NSS_CACHE_UNLOCK();
 
   return ret;
 }
@@ -359,7 +377,7 @@ enum nss_status _nss_cache_getgrnam_r(const char *name, struct group *result,
 // _nss_cache_setspent_locked()
 // Internal setup routine
 
-static enum nss_status _nss_cache_setspent_locked() {
+static enum nss_status _nss_cache_setspent_locked(void) {
 
   DEBUG("Opening shadow.cache\n");
   s_file = fopen("/etc/shadow.cache", "r");
@@ -373,19 +391,20 @@ static enum nss_status _nss_cache_setspent_locked() {
 
 // _nss_cache_setspent()
 // Called by NSS to open the shadow file
+// 'stayopen' parameter is ignored.
 
-enum nss_status _nss_cache_setspent() {
+enum nss_status _nss_cache_setspent(int stayopen) {
   enum nss_status ret;
-  pthread_mutex_lock(&mutex);
+  NSS_CACHE_LOCK();
   ret = _nss_cache_setspent_locked();
-  pthread_mutex_unlock(&mutex);
+  NSS_CACHE_UNLOCK();
   return ret;
 }
 
 // _nss_cache_endspent_locked()
 // Internal close routine
 
-static enum nss_status _nss_cache_endspent_locked() {
+static enum nss_status _nss_cache_endspent_locked(void) {
 
   DEBUG("Closing shadow.cache\n");
   if (s_file) {
@@ -398,11 +417,11 @@ static enum nss_status _nss_cache_endspent_locked() {
 // _nss_cache_endspent()
 // Called by NSS to close the shadow file
 
-enum nss_status _nss_cache_endspent() {
+enum nss_status _nss_cache_endspent(void) {
   enum nss_status ret;
-  pthread_mutex_lock(&mutex);
+  NSS_CACHE_LOCK();
   ret = _nss_cache_endspent_locked();
-  pthread_mutex_unlock(&mutex);
+  NSS_CACHE_UNLOCK();
   return ret;
 }
 
@@ -413,14 +432,20 @@ static enum nss_status _nss_cache_getspent_r_locked(struct spwd *result,
                                                    char *buffer, size_t buflen,
                                                    int *errnop) {
 
-  enum nss_status ret;
+  enum nss_status ret = NSS_STATUS_SUCCESS;
 
-  if (fgetspent_r(s_file, result, buffer, buflen, &result) == 0) {
-    DEBUG("Returning shadow entry %s\n", result->sp_namp);
-    ret = NSS_STATUS_SUCCESS;
-  } else {
-    *errnop = errno;
-    ret = _nss_cache_ent_bad_return_code(*errnop);
+  if (s_file == NULL) {
+    DEBUG("s_file == NULL, going to setspent\n");
+    ret = _nss_cache_setspent_locked();
+  }
+
+  if (ret == NSS_STATUS_SUCCESS) {
+    if (fgetspent_r(s_file, result, buffer, buflen, &result) == 0) {
+      DEBUG("Returning shadow entry %s\n", result->sp_namp);
+    } else {
+      *errnop = errno;
+      ret = _nss_cache_ent_bad_return_code(*errnop);
+    }
   }
 
   return ret;
@@ -433,9 +458,9 @@ enum nss_status _nss_cache_getspent_r(struct spwd *result,
                                      char *buffer, size_t buflen,
                                      int *errnop) {
   enum nss_status ret;
-  pthread_mutex_lock(&mutex);
+  NSS_CACHE_LOCK();
   ret = _nss_cache_getspent_r_locked(result, buffer, buflen, errnop);
-  pthread_mutex_unlock(&mutex);
+  NSS_CACHE_UNLOCK();
   return ret;
 }
 
@@ -448,7 +473,7 @@ enum nss_status _nss_cache_getspnam_r(const char *name, struct spwd *result,
 
   enum nss_status ret;
 
-  pthread_mutex_lock(&mutex);
+  NSS_CACHE_LOCK();
   ret = _nss_cache_setspent_locked();
   DEBUG("Looking for shadow entry %s\n", name);
 
@@ -461,7 +486,7 @@ enum nss_status _nss_cache_getspnam_r(const char *name, struct spwd *result,
   }
 
   _nss_cache_endspent_locked();
-  pthread_mutex_unlock(&mutex);
+  NSS_CACHE_UNLOCK();
 
   return ret;
 }
