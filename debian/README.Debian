@@ -6,7 +6,12 @@ namely /etc/passwd and /etc/group and so forth.  It changes the file
 name to append a .cache, e.g. /etc/passwd.cache, in order to define
 a second set of files that the libc nss layer will merge for you.
 
+Besides the performance improvement over libnss_db at our current size
+and for much of our expected growth; it also provides a way for google3
+static binaries to run without nscd and share the same nss data pool.
+This same code is compiled into those static binaries.
+
 Supported maps are passwd, group, and shadow.  In /etc/nsswitch.conf
 simply include "cache" in the map you want to enable.
 
- -- V <projectvoltron@gmail.com>, Wed, 22 Mar 2008 20:24:00 -0700
+ -- V Hoffman <vasilios@google.com>, Wed,  8 Aug 2007 15:01:23 -0700

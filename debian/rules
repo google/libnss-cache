@@ -17,6 +17,9 @@ else
 	CFLAGS += -O2
 endif
 
+# Set our architecture here so we can build the extra 64bit libs for dapper
+ARCH="`dpkg-architecture  -qDEB_HOST_ARCH`"
+
 # shared library versions, option 1
 #version=2.0.5
 #major=2
@@ -39,7 +42,7 @@ build-stamp: configure-stamp
 	dh_testdir
 
 	# Add here commands to compile the package.
-	$(MAKE)
+	$(MAKE) build_$(ARCH)
 
 	touch build-stamp
 
@@ -60,7 +63,7 @@ install: build
 	dh_installdirs
 
 	# Add here commands to install the package into debian/tmp
-	$(MAKE) install PREFIX=$(CURDIR)/debian/tmp/usr
+	$(MAKE) install_$(ARCH) PREFIX=$(CURDIR)/debian/tmp/usr
 	
 
 # Build architecture-independent files here.
