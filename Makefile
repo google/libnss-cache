@@ -82,9 +82,9 @@ testdirs:
 	mkdir -p $(TESTDATA)
 	mkdir -p $(TESTBIN)
 
-build_i386: nss_cache64
+build_i386: nss_cache32
 
-build_amd64: nss_cache32
+build_amd64: nss_cache64
 
 install_i386: install64
 
