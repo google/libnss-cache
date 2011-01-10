@@ -1,3 +1,12 @@
+libnss-cache (0.10) lucid; urgency=low
+
+  * Rebuild against Lucid.
+  * debian/compat: bump debhelper compatibility level to 7
+  * debian/install: adjust for 64-bit builds going in /usr/lib, not
+    /usr/lib64
+
+ -- Andrew Pollock <apollock@google.com>  Mon, 15 Mar 2010 09:43:04 -0700
+
 libnss-cache (0.9-1) hardy; urgency=low
 
   * fix a FD leak when the indexed files are old.
