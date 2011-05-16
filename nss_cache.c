@@ -22,6 +22,8 @@
 
 #include "nss_cache.h"
 
+#include <sys/mman.h>
+
 // Locking implementation: use pthreads.
 #include <pthread.h>
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -60,109 +62,27 @@ static inline enum nss_status _nss_cache_ent_bad_return_code(int errnoval) {
 // Binary search routines below here
 //
 
-// _nss_cache_bsearch_lookup()
-// Binary search through a sorted nss file for a single record.
+int _nss_cache_bsearch2_compare(const void *key, const void *value) {
+  struct nss_cache_args *args = (struct nss_cache_args*)key;
+  const char *value_text = (const char*)value;
 
-enum nss_status _nss_cache_bsearch_lookup(FILE *file,
-                                         struct nss_cache_args *args,
-                                         int *errnop) {
+  // Using strcmp as the generation of the index sorts without
+  // locale awareness.
+  return strcmp(args->lookup_key, value_text);
+}
+
+enum nss_status _nss_cache_bsearch2(struct nss_cache_args *args, int *errnop) {
   enum nss_cache_match (*lookup)(
                                   FILE *,
                                   struct nss_cache_args *
                                  ) = args->lookup_function;
-  long min = 0;
-  long max;
-  long pos;
-
-  // get the size of the file
-  if (fseek(file, 0, SEEK_END) != 0) {
-    DEBUG("fseek fail\n");
-    return NSS_STATUS_UNAVAIL;
-  }
-  max = ftell(file);
-
-  // binary search until we are within 100 chars of the right line
-  while (min + 100 < max) {
-    pos = (min + max) / 2;
-
-    if (fseek(file, pos, SEEK_SET) != 0) {
-      DEBUG("fseek fail\n");
-      return NSS_STATUS_UNAVAIL;
-    }
-
-    // scan forward to the start of the next line.
-    for (;;) {
-      int c = getc_unlocked(file);
-      if (c == EOF) break;
-      ++pos;
-      if (c == '\n') break;
-    }
-
-    // break if we've stopped making progress in this loop (long lines)
-    if (pos <= min || pos >= max) {
-      break;
-    }
-
-    // see if this line matches
-    switch (lookup(file, args)) {
-      case NSS_CACHE_EXACT:
-        return NSS_STATUS_SUCCESS;  // done!
-      case NSS_CACHE_HIGH:
-        max = pos;
-        continue;  // search again
-      case NSS_CACHE_LOW:
-        min = pos;
-        continue;  // search again
-      case NSS_CACHE_ERROR:
-        if (errno == ERANGE) {
-          // let the caller retry
-          *errnop = errno;
-          return _nss_cache_ent_bad_return_code(*errnop);
-        }
-        DEBUG("expected error %s [errno=%d] from lookup function\n",
-              strerror(errno), errno);
-        return NSS_STATUS_UNAVAIL;
-    }
-  }
-
-  // fall back on a linear search in the remaining space
-  DEBUG("Switching to linear scan\n");
-  pos = min - 100;  // back 100, might be in the middle of the right line
-  if (fseek(file, pos, SEEK_SET) != 0) {
-    DEBUG("fseek fail\n");
-    return NSS_STATUS_UNAVAIL;
-  }
-
-  while (pos < max) {
-    switch (lookup(file, args)) {
-      case NSS_CACHE_EXACT:
-        return NSS_STATUS_SUCCESS;
-      case NSS_CACHE_HIGH:
-      case NSS_CACHE_LOW:
-        pos = ftell(file);
-        continue;
-      case NSS_CACHE_ERROR:
-        if (errno == ERANGE) {
-          // let the caller retry
-          *errnop = errno;
-          return _nss_cache_ent_bad_return_code(*errnop);
-        }
-        break;
-    }
-    break;
-  }
-
-  return NSS_STATUS_NOTFOUND;
-}
-
-// _nss_cache_bsearch()
-// If a sorted nss file is present, attempt a binary search on it.
-
-enum nss_status _nss_cache_bsearch(struct nss_cache_args *args, int *errnop) {
   FILE *file = NULL;
+  FILE *system_file_stream = NULL;
   struct stat system_file;
   struct stat sorted_file;
   enum nss_status ret;
+  long offset = 0;
+  void* mapped_data = NULL;
 
   file =  fopen(args->sorted_filename, "r");
   if (file == NULL) {
@@ -189,11 +109,62 @@ enum nss_status _nss_cache_bsearch(struct nss_cache_args *args, int *errnop) {
     return NSS_STATUS_UNAVAIL;
   }
 
-  ret = _nss_cache_bsearch_lookup(file, args, errnop);
+  mapped_data = mmap(NULL, sorted_file.st_size, PROT_READ, MAP_PRIVATE, fileno(file), 0);
+  if (mapped_data == MAP_FAILED) {
+    DEBUG("mmap failed\n");
+    fclose(file);
+    return NSS_STATUS_UNAVAIL;
+  }
 
+  const char* data = (const char*)mapped_data;
+  while (*data != '\n') { ++data; }
+  long entry_size = data - (const char*)mapped_data + 1;
+  long entry_count = sorted_file.st_size / entry_size;
+
+  void* entry = bsearch(args, mapped_data, entry_count, entry_size, &_nss_cache_bsearch2_compare);
+  if (entry != NULL) {
+    const char *entry_text = entry;
+    sscanf(entry_text + strlen(entry_text) + 1, "%ld", &offset);
+  }
+
+  if (munmap(mapped_data, sorted_file.st_size) == -1) {
+    DEBUG("munmap failed\n");
+  }
   fclose(file);
-  return ret;
 
+  if (entry == NULL) {
+    return NSS_STATUS_NOTFOUND;
+  }
+
+  system_file_stream = fopen(args->system_filename, "r");
+  if (system_file_stream == NULL) {
+    DEBUG("error opening %s\n", args->system_filename);
+    return NSS_STATUS_UNAVAIL;
+  }
+
+  if (fseek(system_file_stream, offset, SEEK_SET) != 0) {
+    DEBUG("fseek fail\n");
+    return NSS_STATUS_UNAVAIL;
+  }
+
+  switch (lookup(system_file_stream, args)) {
+    case NSS_CACHE_EXACT:
+      ret = NSS_STATUS_SUCCESS;
+      break;
+    case NSS_CACHE_ERROR:
+      if (errno == ERANGE) {
+        // let the caller retry
+        *errnop = errno;
+        ret = _nss_cache_ent_bad_return_code(*errnop);
+      }
+      break;
+    default:
+      ret = NSS_STATUS_UNAVAIL;
+      break;
+  }
+
+  fclose(system_file_stream);
+  return ret;
 }
 
 //
@@ -364,7 +335,7 @@ enum nss_status _nss_cache_getpwuid_r(uid_t uid, struct passwd *result,
     DEBUG("filename too long\n");
     return NSS_STATUS_UNAVAIL;
   }
-  strncat(filename, ".byuid", 6);
+  strncat(filename, ".ixuid", 6);
 
   args.sorted_filename = filename;
   args.system_filename = p_filename;
@@ -373,17 +344,14 @@ enum nss_status _nss_cache_getpwuid_r(uid_t uid, struct passwd *result,
   args.lookup_result = result;
   args.buffer = buffer;
   args.buflen = buflen;
+  char uid_text[11];
+  snprintf(uid_text, sizeof(uid_text), "%d", uid);
+  args.lookup_key = uid_text;
+  args.lookup_key_length = strlen(uid_text);
 
   DEBUG("Binary search for uid %d\n", uid);
   NSS_CACHE_LOCK();
-  ret = _nss_cache_bsearch(&args, errnop);
-
-  // TODO(vasilios): make this a runtime or compile-time option, as this slows
-  // down legitimate misses as the trade off for safety.
-  if (ret == NSS_STATUS_NOTFOUND) {
-    DEBUG("Binary search returned nothing.\n");
-    ret = NSS_STATUS_UNAVAIL;
-  }
+  ret = _nss_cache_bsearch2(&args, errnop);
 
   if (ret == NSS_STATUS_UNAVAIL) {
     DEBUG("Binary search failed, falling back to full linear search\n");
@@ -434,7 +402,7 @@ enum nss_status _nss_cache_getpwnam_r(const char *name, struct passwd *result,
     free(pw_name);
     return NSS_STATUS_UNAVAIL;
   }
-  strncat(filename, ".byname", 7);
+  strncat(filename, ".ixname", 7);
 
   args.sorted_filename = filename;
   args.system_filename = p_filename;
@@ -443,16 +411,11 @@ enum nss_status _nss_cache_getpwnam_r(const char *name, struct passwd *result,
   args.lookup_result = result;
   args.buffer = buffer;
   args.buflen = buflen;
+  args.lookup_key = pw_name;
+  args.lookup_key_length = strlen(pw_name);
 
   DEBUG("Binary search for user %s\n", pw_name);
-  ret = _nss_cache_bsearch(&args, errnop);
-
-  // TODO(vasilios): make this a runtime or compile-time option, as this slows
-  // down legitimate misses as the trade off for safety.
-  if (ret == NSS_STATUS_NOTFOUND) {
-    DEBUG("Binary search returned nothing.\n");
-    ret = NSS_STATUS_UNAVAIL;
-  }
+  ret = _nss_cache_bsearch2(&args, errnop);
 
   if (ret == NSS_STATUS_UNAVAIL) {
     DEBUG("Binary search failed, falling back to full linear search\n");
@@ -651,12 +614,20 @@ enum nss_status _nss_cache_getgrgid_r(gid_t gid, struct group *result,
   struct nss_cache_args args;
   enum nss_status ret;
 
+  // Since we binary search over the groups using the user provided
+  // buffer, we do not start searching before we have a buffer that
+  // is big enough to have a high chance of succeeding.
+  if (buflen < (1 << 20)) {
+    *errnop = ERANGE;
+    return NSS_STATUS_TRYAGAIN;
+  }
+
   strncpy(filename, g_filename, NSS_CACHE_PATH_LENGTH - 1);
   if (strlen(filename) > NSS_CACHE_PATH_LENGTH - 7) {
     DEBUG("filename too long\n");
     return NSS_STATUS_UNAVAIL;
   }
-  strncat(filename, ".bygid", 6);
+  strncat(filename, ".ixgid", 6);
 
   args.sorted_filename = filename;
   args.system_filename = g_filename;
@@ -665,17 +636,14 @@ enum nss_status _nss_cache_getgrgid_r(gid_t gid, struct group *result,
   args.lookup_result = result;
   args.buffer = buffer;
   args.buflen = buflen;
+  char gid_text[11];
+  snprintf(gid_text, sizeof(gid_text), "%d", gid);
+  args.lookup_key = gid_text;
+  args.lookup_key_length = strlen(gid_text);
 
   DEBUG("Binary search for gid %d\n", gid);
   NSS_CACHE_LOCK();
-  ret = _nss_cache_bsearch(&args, errnop);
-
-  // TODO(vasilios): make this a runtime or compile-time option, as this slows
-  // down legitimate misses as the trade off for safety.
-  if (ret == NSS_STATUS_NOTFOUND) {
-    DEBUG("Binary search returned nothing.\n");
-    ret = NSS_STATUS_UNAVAIL;
-  }
+  ret = _nss_cache_bsearch2(&args, errnop);
 
   if (ret == NSS_STATUS_UNAVAIL) {
     DEBUG("Binary search failed, falling back to full linear search\n");
@@ -726,7 +694,7 @@ enum nss_status _nss_cache_getgrnam_r(const char *name, struct group *result,
     free(gr_name);
     return NSS_STATUS_UNAVAIL;
   }
-  strncat(filename, ".byname", 7);
+  strncat(filename, ".ixname", 7);
 
   args.sorted_filename = filename;
   args.system_filename = g_filename;
@@ -735,16 +703,11 @@ enum nss_status _nss_cache_getgrnam_r(const char *name, struct group *result,
   args.lookup_result = result;
   args.buffer = buffer;
   args.buflen = buflen;
+  args.lookup_key = gr_name;
+  args.lookup_key_length = strlen(gr_name);
 
   DEBUG("Binary search for group %s\n", gr_name);
-  ret = _nss_cache_bsearch(&args, errnop);
-
-  // TODO(vasilios): make this a runtime or compile-time option, as this slows
-  // down legitimate misses as the trade off for safety.
-  if (ret == NSS_STATUS_NOTFOUND) {
-    DEBUG("Binary search returned nothing.\n");
-    ret = NSS_STATUS_UNAVAIL;
-  }
+  ret = _nss_cache_bsearch2(&args, errnop);
 
   if (ret == NSS_STATUS_UNAVAIL) {
     DEBUG("Binary search failed, falling back to full linear search\n");
@@ -926,7 +889,7 @@ enum nss_status _nss_cache_getspnam_r(const char *name, struct spwd *result,
     free(sp_namp);
     return NSS_STATUS_UNAVAIL;
   }
-  strncat(filename, ".byname", 7);
+  strncat(filename, ".ixname", 7);
 
   args.sorted_filename = filename;
   args.system_filename = s_filename;
@@ -935,16 +898,11 @@ enum nss_status _nss_cache_getspnam_r(const char *name, struct spwd *result,
   args.lookup_result = result;
   args.buffer = buffer;
   args.buflen = buflen;
+  args.lookup_key = sp_namp;
+  args.lookup_key_length = strlen(sp_namp);
 
   DEBUG("Binary search for user %s\n", sp_namp);
-  ret = _nss_cache_bsearch(&args, errnop);
-
-  // TODO(vasilios): make this a runtime or compile-time option, as this slows
-  // down legitimate misses as the trade off for safety.
-  if (ret == NSS_STATUS_NOTFOUND) {
-    DEBUG("Binary search returned nothing.\n");
-    ret = NSS_STATUS_UNAVAIL;
-  }
+  ret = _nss_cache_bsearch2(&args, errnop);
 
   if (ret == NSS_STATUS_UNAVAIL) {
     DEBUG("Binary search failed, falling back to full linear search\n");

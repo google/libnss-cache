@@ -186,7 +186,7 @@ static int getspent_to_file(FILE *output) {
       buffer = realloc(buffer, buflen);
     }
     if (ret == NSS_STATUS_UNAVAIL) {
-      fprintf(stderr, "ERROR: failed to access shadow test data\n");
+      perror("ERROR: failed to access shadow test data");
       return 1;
     }
   } while (ret == NSS_STATUS_SUCCESS || ret == NSS_STATUS_TRYAGAIN);

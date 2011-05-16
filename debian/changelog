@@ -1,6 +1,22 @@
-libnss-cache (0.10) lucid; urgency=low
+libnss-cache (0.10.1-0gg1) unstable; urgency=low
 
-  * Rebuild against Lucid.
+  * New upstream release.
+  * Speeds up the name / uid / gid lookup in the nss-cache library.
+    * don't search groups if the provided buffer is small enough that the
+      chance of succeeding is small
+    * create simple index structure with uniformly sized entries and
+	  mmap/bsearch as a replacement for a heuristic binary search
+    * if the entry was not found in the index, do not fall back to linear
+      search; still fall back if the entry was outdated, not accessible or
+      if a value was not found at the expected offset
+    * replace strcoll with strcmp for checking equality of the indedx, as
+	  the index is built based on a simple string sort
+
+ -- Jamie Wilkinson <jaq@google.com>  Tue, 25 Jan 2011 23:17:04 -0800
+
+libnss-cache (0.9-2) lucid; urgency=low
+
+  * Rebuild against Lucid
   * debian/compat: bump debhelper compatibility level to 7
   * debian/install: adjust for 64-bit builds going in /usr/lib, not
     /usr/lib64

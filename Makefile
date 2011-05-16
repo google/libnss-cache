@@ -16,6 +16,9 @@ LD_SONAME=-Wl,-soname,$(SONAME)
 TESTBIN=.testbin
 TESTDATA=.testdata
 
+SOURCES = Makefile gen_getent.c lookup.c nss_cache.c nss_cache.h nss_test.h COPYING
+VERSION = $(shell cat version)
+
 default: build_amd64
 	echo N.B.  Defaulted to build_amd64!
 
@@ -24,39 +27,40 @@ test: test_getent time_lookups
 time_lookups: lookup_data lookup.c nss_cache.c
 	$(CC) $(CFLAGS) -o $(TESTBIN)/lookup lookup.c nss_cache.c
 	@echo Linear username lookups
-	rm -f $(TESTDATA)/passwd.cache.byname
+	rm -f $(TESTDATA)/passwd.cache.ixname
 	time -f %E $(TESTBIN)/lookup -c getpwnam -f $(TESTDATA)/rand_pwnames
 	@echo Binary username lookups
-	sort -t: -k1,1 $(TESTDATA)/passwd.cache > $(TESTDATA)/passwd.cache.byname
+	../vendetta/files/gen_cache.py $(TESTDATA)/passwd.cache 1 $(TESTDATA)/passwd.cache.ixname
 	time -f %E $(TESTBIN)/lookup -c getpwnam -f $(TESTDATA)/rand_pwnames
 	@echo Linear UID lookups
-	rm -f $(TESTDATA)/passwd.cache.byuid
+	rm -f $(TESTDATA)/passwd.cache.ixuid
 	time -f %E $(TESTBIN)/lookup -c getpwuid -f $(TESTDATA)/rand_pwuids
 	@echo Binary UID lookups
-	sort -t: -k3,3 -n $(TESTDATA)/passwd.cache > $(TESTDATA)/passwd.cache.byuid
+	../vendetta/files/gen_cache.py $(TESTDATA)/passwd.cache 3 $(TESTDATA)/passwd.cache.ixuid
 	time -f %E $(TESTBIN)/lookup -c getpwuid -f $(TESTDATA)/rand_pwuids
 	@echo Linear groupname lookups
-	rm -f $(TESTDATA)/group.cache.byname
+	rm -f $(TESTDATA)/group.cache.ixname
 	time -f %E $(TESTBIN)/lookup -c getgrnam -f $(TESTDATA)/rand_grnames
 	@echo Binary groupname lookups
-	sort -t: -k1,1 $(TESTDATA)/group.cache > $(TESTDATA)/group.cache.byname
+	sort -t: -k1,1 $(TESTDATA)/group.cache > $(TESTDATA)/group.cache.ixname
+	../vendetta/files/gen_cache.py $(TESTDATA)/group.cache 1 $(TESTDATA)/group.cache.ixname
 	time -f %E $(TESTBIN)/lookup -c getgrnam -f $(TESTDATA)/rand_grnames
 	@echo Linear GID lookups
-	rm -f $(TESTDATA)/group.cache.bygid
+	rm -f $(TESTDATA)/group.cache.ixgid
 	time -f %E $(TESTBIN)/lookup -c getgrgid -f $(TESTDATA)/rand_grgids
 	@echo Binary GID lookups
-	sort -t: -k3,3 -n $(TESTDATA)/group.cache > $(TESTDATA)/group.cache.bygid
+	../vendetta/files/gen_cache.py $(TESTDATA)/group.cache 3 $(TESTDATA)/group.cache.ixgid
 	time -f %E $(TESTBIN)/lookup -c getgrgid -f $(TESTDATA)/rand_grgids
 	@echo Linear shadow lookups
-	rm -f $(TESTDATA)/shadow.cache.byname
+	rm -f $(TESTDATA)/shadow.cache.ixname
 	time -f %E $(TESTBIN)/lookup -c getspnam -f $(TESTDATA)/rand_spnames
 	@echo Binary shadow lookups
-	sort -t: -k1,1 $(TESTDATA)/shadow.cache > $(TESTDATA)/shadow.cache.byname
+	../vendetta/files/gen_cache.py $(TESTDATA)/shadow.cache 1 $(TESTDATA)/shadow.cache.ixname
 	time -f %E $(TESTBIN)/lookup -c getspnam -f $(TESTDATA)/rand_spnames
 
 test_getent: getent_data gen_getent.c nss_cache.c
 	$(CC) -o $(TESTBIN)/gen_getent gen_getent.c nss_cache.c
-	./$(TESTBIN)/gen_getent
+	sudo ./$(TESTBIN)/gen_getent
 	diff $(TESTDATA)/passwd.cache $(TESTDATA)/passwd.cache.out
 	diff $(TESTDATA)/group.cache $(TESTDATA)/group.cache.out
 	diff $(TESTDATA)/shadow.cache $(TESTDATA)/shadow.cache.out
@@ -76,7 +80,7 @@ lookup_data: getent_data
 getent_data: testdirs
 	getent passwd > $(TESTDATA)/passwd.cache
 	getent group > $(TESTDATA)/group.cache
-	getent shadow > $(TESTDATA)/shadow.cache
+	sudo getent shadow > $(TESTDATA)/shadow.cache
 
 testdirs:
 	mkdir -p $(TESTDATA)
@@ -126,3 +130,16 @@ install32: install
 	[ -d $(LIBDIR32) ] || install -d $(LIBDIR32)
 	install $(BUILD32)/$(LIBRARY) $(LIBDIR32)
 	cd $(LIBDIR32); for link in $(LINKS); do ln -sf $(LIBRARY) $$link ; done
+
+distclean: clean
+	rm -f *~ \#*
+
+dist:
+	rm -rf libnss-cache-$(VERSION) libnss-cache-$(VERSION).tar libnss-cache-$(VERSION).tar.gz
+	mkdir libnss-cache-$(VERSION)
+	cp $(SOURCES) libnss-cache-$(VERSION)
+	tar cf libnss-cache-$(VERSION).tar libnss-cache-$(VERSION)
+	gzip -9 libnss-cache-$(VERSION).tar
+	rm -rf libnss-cache-$(VERSION)
+
+.PHONY: dist clean install install64 install32 distclean

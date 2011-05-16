@@ -60,6 +60,8 @@ struct nss_cache_args {
   void *lookup_result;
   char *buffer;
   size_t buflen;
+  char *lookup_key;
+  size_t lookup_key_length;
 };
 
 #endif /* NSS_CACHE_H */
