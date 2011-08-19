@@ -21,5 +21,5 @@ override_dh_install:
 override_dh_auto_test:
 
 
-# Set our architecture here so we can build the extra 64bit libs for dapper
+# Set our architecture here so we can build the 64bit libs
 ARCH="`dpkg-architecture  -qDEB_HOST_ARCH`"
