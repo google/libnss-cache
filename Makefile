@@ -16,7 +16,7 @@ LD_SONAME=-Wl,-soname,$(SONAME)
 TESTBIN=.testbin
 TESTDATA=.testdata
 
-SOURCES = Makefile gen_getent.c lookup.c nss_cache.c nss_cache.h nss_test.h COPYING
+SOURCES = Makefile gen_getent.c lookup.c nss_cache.c nss_cache.h nss_test.h COPYING version libnss-cache.spec
 VERSION = $(shell cat version)
 
 default: build_amd64
