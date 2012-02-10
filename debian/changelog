@@ -1,3 +1,19 @@
+libnss-cache (0.10.1-1) unstable; urgency=low
+
+  * New upstream release.
+  * Speeds up the name / uid / gid lookup in the nss-cache library.
+    * don't search groups if the provided buffer is small enough that the
+      chance of succeeding is small
+    * create simple index structure with uniformly sized entries and
+	  mmap/bsearch as a replacement for a heuristic binary search
+    * if the entry was not found in the index, do not fall back to linear
+      search; still fall back if the entry was outdated, not accessible or
+      if a value was not found at the expected offset
+    * replace strcoll with strcmp for checking equality of the index, as
+	  the index is built based on a simple string sort
+
+ -- Jamie Wilkinson <jaq@debian.org>  Fri, 10 Feb 2012 11:11:07 +1100
+
 libnss-cache (0.10-2) unstable; urgency=low
 
   *  Remove post{inst,rm}, as dh_makeshlibs already does the ldconfig for us.
