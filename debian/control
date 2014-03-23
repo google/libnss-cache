@@ -8,8 +8,7 @@ Standards-Version: 3.8.4
 Homepage: http://code.google.com/p/nsscache
 
 Package: libnss-cache
-# TODO(jaq): The makefile only supports these two arch's, and needs updating.
-Architecture: i386 amd64
+Architecture: all
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Recommends: nsscache
 Description: NSS module for using nsscache-generated files
