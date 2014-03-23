@@ -86,7 +86,7 @@ $(LIBRARY): nss_cache.o
 	$(CC) -shared $(LD_SONAME) -o $(LIBRARY) $<
 
 clean:
-	rm -f $(LIBRARY) *.o lookup
+	rm -f $(LIBRARY) *.o lookup gen_getent
 	rm -rf $(TESTDATA)
 
 install:
