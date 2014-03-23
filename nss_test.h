@@ -29,12 +29,17 @@ const char *PASSWD_FILE = ".testdata/passwd.cache";
 const char *GROUP_FILE = ".testdata/group.cache";
 const char *SHADOW_FILE = ".testdata/shadow.cache";
 
+extern enum nss_status _nss_cache_getpwent_r(struct passwd *result,
+                                             char *buffer, size_t buflen, int *errnop);
 extern enum nss_status _nss_cache_getpwnam_r(const char *name,
                                              struct passwd *result,
                                              char *buffer, size_t buflen,
                                              int *errnop);
 extern enum nss_status _nss_cache_getpwuid_r(uid_t uid,
                                              struct passwd *result,
+                                             char *buffer, size_t buflen,
+                                             int *errnop);
+extern enum nss_status _nss_cache_getgrent_r(struct group *result,
                                              char *buffer, size_t buflen,
                                              int *errnop);
 extern enum nss_status _nss_cache_getgrnam_r(const char *name,
@@ -48,5 +53,9 @@ extern enum nss_status _nss_cache_getspnam_r(const char *name,
                                              struct spwd *result,
                                              char *buffer, size_t buflen,
                                              int *errnop);
+extern enum nss_status _nss_cache_getspent_r(struct spwd *result,
+                                             char *buffer, size_t buflen,
+                                             int *errnop);
+extern char* _nss_cache_setpwent_path(const char* path);
 
 #endif /* NSS_TEST_H */
