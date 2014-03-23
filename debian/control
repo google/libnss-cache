@@ -2,13 +2,12 @@ Source: libnss-cache
 Section: admin
 Priority: optional
 Maintainer: Jamie Wilkinson <jaq@debian.org>
-Build-Depends: debhelper (>= 7.0.50), libc6-dev-i386 [amd64],
-  libc6-dev-amd64 [i386], gcc-multilib | lib32gcc1 [amd64] | lib64gcc1 [i386]
+Build-Depends: debhelper (>= 7.0.50)
 Standards-Version: 3.8.4
 Homepage: http://code.google.com/p/nsscache
 
 Package: libnss-cache
-Architecture: all
+Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Recommends: nsscache
 Description: NSS module for using nsscache-generated files
