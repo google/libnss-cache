@@ -2,6 +2,8 @@ libnss-cache (0.11-1) unstable; urgency=medium
 
   * New upstream release.
   * Change to arch: any, now builds on all architectures. 
+  * Update standards-version. 
+  * Depend on new debhelper. 
 
  -- Jamie Wilkinson <jaq@debian.org>  Sun, 23 Mar 2014 16:55:37 +1100
 
