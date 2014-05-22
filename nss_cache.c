@@ -80,7 +80,7 @@ enum nss_status _nss_cache_bsearch2(struct nss_cache_args *args, int *errnop) {
   FILE *system_file_stream = NULL;
   struct stat system_file;
   struct stat sorted_file;
-  enum nss_status ret;
+  enum nss_status ret = 100;
   long offset = 0;
   void* mapped_data = NULL;
 
