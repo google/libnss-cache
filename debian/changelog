@@ -1,5 +1,6 @@
-libnss-cache (0.11-3) UNRELEASED; urgency=medium
+libnss-cache (0.12-1) UNRELEASED; urgency=medium
 
+  * New upstream version.
   * Update the control file with VCS URLs. 
 
  -- Jamie Wilkinson <jaq@debian.org>  Mon, 20 Oct 2014 16:39:58 +1100
