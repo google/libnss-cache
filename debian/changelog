@@ -1,3 +1,9 @@
+libnss-cache (0.12-1) UNRELEASED; urgency=medium
+
+  * New upstream release.  (Closes: #745258; thanks Arthur Marble).
+
+ -- Jamie Wilkinson <jaq@debian.org>  Thu, 22 May 2014 18:12:49 +1000
+
 libnss-cache (0.11-1) unstable; urgency=medium
 
   * New upstream release.
