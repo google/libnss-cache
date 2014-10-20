@@ -1,3 +1,9 @@
+libnss-cache (0.12-2) UNRELEASED; urgency=medium
+
+  * Update control file with VCS URLs. 
+
+ -- Jamie Wilkinson <jaq@debian.org>  Mon, 20 Oct 2014 16:50:33 +1100
+
 libnss-cache (0.12-1) unstable; urgency=medium
 
   * New upstream release.  (Closes: #745258; thanks Arthur Marble). 
