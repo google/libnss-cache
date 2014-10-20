@@ -1,3 +1,11 @@
+libnss-cache (0.11-2) unstable; urgency=low
+
+  * Fix FTBFS with clang
+    - Fixed the potential usage of an uninitialized variable error in
+      nss_cache.c
+
+ -- Arthur Marble <arthur@info9.net>  Sat, 19 Apr 2014 16:02:56 -0500
+
 libnss-cache (0.11-1) unstable; urgency=medium
 
   * New upstream release.
