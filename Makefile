@@ -89,7 +89,7 @@ clean:
 	rm -f $(LIBRARY) *.o lookup gen_getent
 	rm -rf $(TESTDATA)
 
-install:
+install: all 
 	install -d $(LIBDIR)
 	install $(LIBRARY) $(LIBDIR)
 	ln -sf $(LIBRARY) $(LIBDIR)/$(BASE_LIBRARY)
