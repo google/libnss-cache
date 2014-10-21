@@ -7,10 +7,9 @@ int main() {
   setpwent();
   for (;;) {
     errno = 0;
-    struct passwd *pw = getpwent();
+    struct passwd* pw = getpwent();
     if (!pw) {
-      if (errno != 0)
-        printf("ERRNO: %u %m\n", errno);
+      if (errno != 0) printf("ERRNO: %u %m\n", errno);
       break;
     }
   }
