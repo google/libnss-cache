@@ -299,6 +299,9 @@ static enum nss_status _nss_cache_getpwent_r_locked(struct passwd *result,
     if (fgetpwent_r(p_file, result, buffer, buflen, &result) == 0) {
       DEBUG("Returning user %d:%s\n", result->pw_uid, result->pw_name);
     } else {
+      if (errno == ENOENT) {
+        errno = 0;
+      }
       *errnop = errno;
       ret = _nss_cache_ent_bad_return_code(*errnop);
     }
@@ -582,7 +585,11 @@ static enum nss_status _nss_cache_getgrent_r_locked(struct group *result,
        * something similar in CONCAT(_nss_files_get,ENTNAME_r) (around
        * line 242 in glibc 2.4 sources).
        */
-      fsetpos(g_file, &position);
+      if (errno == ENOENT) {
+        errno = 0;
+      } else {
+        fsetpos(g_file, &position);
+      }
       *errnop = errno;
       ret = _nss_cache_ent_bad_return_code(*errnop);
     }
@@ -841,6 +848,9 @@ static enum nss_status _nss_cache_getspent_r_locked(struct spwd *result,
     if (fgetspent_r(s_file, result, buffer, buflen, &result) == 0) {
       DEBUG("Returning shadow entry %s\n", result->sp_namp);
     } else {
+      if (errno == ENOENT) {
+        errno = 0;
+      }
       *errnop = errno;
       ret = _nss_cache_ent_bad_return_code(*errnop);
     }
