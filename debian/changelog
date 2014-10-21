@@ -1,11 +1,11 @@
-libnss-cache (0.13-1) UNRELEASED; urgency=medium
+libnss-cache (0.13-1) unstable; urgency=medium
 
   * Update control file with VCS URLs. 
   * New upstream version.
   * Update watch file to match new github upstream.
   * Bump standards version.
 
- -- Jamie Wilkinson <jaq@debian.org>  Wed, 22 Oct 2014 10:21:00 +1100
+ -- Jamie Wilkinson <jaq@debian.org>  Wed, 22 Oct 2014 10:41:44 +1100
 
 libnss-cache (0.12-1) unstable; urgency=medium
 
