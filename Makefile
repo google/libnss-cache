@@ -89,7 +89,7 @@ $(LIBRARY): nss_cache.o
 	$(CC) -shared $(LD_SONAME) -o $(LIBRARY) $<
 
 clean:
-	rm -f $(LIBRARY) *.o lookup gen_getent
+	rm -f $(LIBRARY) *.o lookup gen_getent last_pw_errno_test
 	rm -rf $(TESTDATA)
 
 install: all 
