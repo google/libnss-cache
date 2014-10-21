@@ -1,6 +1,7 @@
-CC=gcc
-#CFLAGS=-Wall -Wstrict-prototypes -Werror -fPIC -DDEBUG -g -O0
-CFLAGS=-Wall -Wstrict-prototypes -Werror -fPIC
+CC ?= gcc
+CFLAGS ?= -Wall -Wstrict-prototypes -Werror
+CFLAGS += -fPIC
+LDFLAGS += -shared
 LIBRARY=libnss_cache.so.2.0
 BASE_LIBRARY=libnss_cache.so.2
 PREFIX=$(DESTDIR)/usr
@@ -86,7 +87,7 @@ testdirs:
 	mkdir -p $(TESTDATA)
 
 $(LIBRARY): nss_cache.o
-	$(CC) -shared $(LD_SONAME) -o $(LIBRARY) $<
+	$(CC) $(CFLAGS) $(LDFLAGS) $(LD_SONAME) -o $(LIBRARY) $<
 
 clean:
 	rm -f $(LIBRARY) *.o lookup gen_getent last_pw_errno_test
