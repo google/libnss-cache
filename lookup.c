@@ -39,9 +39,8 @@
 // print out flags and arguments
 
 static void usage(char *program) {
-  
+
   fprintf(stderr, "Usage: %s -c nss_function -f filename\n", program);
-  
 }
 
 // getpwnam_wrapper()
@@ -64,7 +63,7 @@ static int getpwnam_wrapper(char *name) {
   do {
     ret = _nss_cache_getpwnam_r(name, &result, buffer, buflen, &errnop);
     if (ret == NSS_STATUS_SUCCESS) {
-      //printf("found %s, %d\n", result.pw_name, result.pw_uid);
+      // printf("found %s, %d\n", result.pw_name, result.pw_uid);
       found = 0;
     }
     if (ret == NSS_STATUS_NOTFOUND) {
@@ -83,7 +82,6 @@ static int getpwnam_wrapper(char *name) {
   free(buffer);
 
   return found;
-
 }
 
 // getpwuid_wrapper()
@@ -106,7 +104,7 @@ static int getpwuid_wrapper(uid_t uid) {
   do {
     ret = _nss_cache_getpwuid_r(uid, &result, buffer, buflen, &errnop);
     if (ret == NSS_STATUS_SUCCESS) {
-      //printf("found %s, %d\n", result.pw_name, result.pw_uid);
+      // printf("found %s, %d\n", result.pw_name, result.pw_uid);
       found = 0;
     }
     if (ret == NSS_STATUS_NOTFOUND) {
@@ -125,7 +123,6 @@ static int getpwuid_wrapper(uid_t uid) {
   free(buffer);
 
   return found;
-
 }
 
 // getgrnam_wrapper()
@@ -148,7 +145,7 @@ static int getgrnam_wrapper(char *name) {
   do {
     ret = _nss_cache_getgrnam_r(name, &result, buffer, buflen, &errnop);
     if (ret == NSS_STATUS_SUCCESS) {
-      //printf("found %s, %d\n", result.gr_name, result.gr_gid);
+      // printf("found %s, %d\n", result.gr_name, result.gr_gid);
       found = 0;
     }
     if (ret == NSS_STATUS_NOTFOUND) {
@@ -167,7 +164,6 @@ static int getgrnam_wrapper(char *name) {
   free(buffer);
 
   return found;
-
 }
 
 // getgrgid_wrapper()
@@ -190,7 +186,7 @@ static int getgrgid_wrapper(gid_t gid) {
   do {
     ret = _nss_cache_getgrgid_r(gid, &result, buffer, buflen, &errnop);
     if (ret == NSS_STATUS_SUCCESS) {
-      //printf("found %s, %d\n", result.gr_name, result.gr_gid);
+      // printf("found %s, %d\n", result.gr_name, result.gr_gid);
       found = 0;
     }
     if (ret == NSS_STATUS_NOTFOUND) {
@@ -209,7 +205,6 @@ static int getgrgid_wrapper(gid_t gid) {
   free(buffer);
 
   return found;
-
 }
 
 // getspnam_wrapper()
@@ -232,7 +227,7 @@ static int getspnam_wrapper(char *name) {
   do {
     ret = _nss_cache_getspnam_r(name, &result, buffer, buflen, &errnop);
     if (ret == NSS_STATUS_SUCCESS) {
-      //printf("found %s, %s\n", result.sp_namp, result.sp_pwdp);
+      // printf("found %s, %s\n", result.sp_namp, result.sp_pwdp);
       found = 0;
     }
     if (ret == NSS_STATUS_NOTFOUND) {
@@ -251,7 +246,6 @@ static int getspnam_wrapper(char *name) {
   free(buffer);
 
   return found;
-
 }
 
 // lookup_getpwnam()
@@ -283,7 +277,6 @@ static int lookup_getpwnam(FILE *input) {
   }
 
   return ret;
-
 }
 
 // lookup_getpwuid()
@@ -295,7 +288,7 @@ static int lookup_getpwuid(FILE *input) {
   int lines = 0;
   char line[255];
   int ret;
-  
+
   while (fgets(line, sizeof(line), input)) {
     lines += 1;
     // strip trailing newline
@@ -315,7 +308,6 @@ static int lookup_getpwuid(FILE *input) {
   }
 
   return ret;
-
 }
 
 // lookup_getgrnam()
@@ -327,7 +319,7 @@ static int lookup_getgrnam(FILE *input) {
   int lines = 0;
   char line[255];
   int ret;
-  
+
   while (fgets(line, sizeof(line), input)) {
     lines += 1;
     // strip trailing newline
@@ -347,7 +339,6 @@ static int lookup_getgrnam(FILE *input) {
   }
 
   return ret;
-
 }
 
 // lookup_getgrgid()
@@ -359,7 +350,7 @@ static int lookup_getgrgid(FILE *input) {
   int lines = 0;
   char line[255];
   int ret;
-  
+
   while (fgets(line, sizeof(line), input)) {
     lines += 1;
     // strip trailing newline
@@ -379,7 +370,6 @@ static int lookup_getgrgid(FILE *input) {
   }
 
   return ret;
-
 }
 
 // lookup_getspnam()
@@ -391,7 +381,7 @@ static int lookup_getspnam(FILE *input) {
   int lines = 0;
   char line[255];
   int ret;
-  
+
   while (fgets(line, sizeof(line), input)) {
     lines += 1;
     // strip trailing newline
@@ -411,7 +401,6 @@ static int lookup_getspnam(FILE *input) {
   }
 
   return ret;
-
 }
 
 // nss_lookup()
@@ -438,7 +427,6 @@ static int nss_lookup(char *call, FILE *input) {
   }
 
   return ret;
-
 }
 
 // main()
@@ -477,10 +465,9 @@ int main(int argc, char **argv) {
     fprintf(stderr, "failed to open %s\n", filename);
     return 255;
   }
-  
+
   ret = nss_lookup(call, input);
   fclose(input);
 
   return ret;
-
 }

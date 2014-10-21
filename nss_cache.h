@@ -35,15 +35,20 @@
 
 #ifdef DEBUG
 #undef DEBUG
-#define DEBUG(fmt, args...)  do { fprintf(stderr, fmt, ##args); } while (0)
+#define DEBUG(fmt, args...)                                                    \
+  do {                                                                         \
+    fprintf(stderr, fmt, ##args);                                              \
+  } while (0)
 #else
-#define DEBUG(fmt, ...)      do { } while (0)
+#define DEBUG(fmt, ...)                                                        \
+  do {                                                                         \
+  } while (0)
 #endif /* DEBUG */
 
 #define NSS_CACHE_PATH_LENGTH 255
-extern char* _nss_cache_setpwent_path(const char *path);
-extern char* _nss_cache_setgrent_path(const char *path);
-extern char* _nss_cache_setspent_path(const char *path);
+extern char *_nss_cache_setpwent_path(const char *path);
+extern char *_nss_cache_setgrent_path(const char *path);
+extern char *_nss_cache_setspent_path(const char *path);
 
 enum nss_cache_match {
   NSS_CACHE_EXACT = 0,

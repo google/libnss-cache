@@ -79,6 +79,9 @@ getent_data: testdirs
 	getent group > $(TESTDATA)/group.cache
 	sudo getent shadow > $(TESTDATA)/shadow.cache
 
+last_pw_errno_test: test/last_pw_errno_test.c
+	$(CC) $(CFLAGS) -o $@ $^
+
 testdirs:
 	mkdir -p $(TESTDATA)
 
@@ -86,7 +89,7 @@ $(LIBRARY): nss_cache.o
 	$(CC) -shared $(LD_SONAME) -o $(LIBRARY) $<
 
 clean:
-	rm -f $(LIBRARY) *.o lookup gen_getent
+	rm -f $(LIBRARY) *.o lookup gen_getent last_pw_errno_test
 	rm -rf $(TESTDATA)
 
 install: all 
