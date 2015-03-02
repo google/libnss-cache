@@ -3,8 +3,10 @@ Section: admin
 Priority: optional
 Maintainer: Jamie Wilkinson <jaq@debian.org>
 Build-Depends: debhelper (>= 9)
-Standards-Version: 3.9.5
+Standards-Version: 3.9.6
 Homepage: http://code.google.com/p/nsscache
+Vcs-Browser: https://github.com/google/libnss-cache/tree/debian
+Vcs-Git: https://github.com/google/libnss-cache -b debian
 
 Package: libnss-cache
 Architecture: any

@@ -1,8 +1,26 @@
-libnss-cache (0.12-1) UNRELEASED; urgency=medium
+libnss-cache (0.13-1) unstable; urgency=medium
 
-  * New upstream release.  (Closes: #745258; thanks Arthur Marble).
+  * Update control file with VCS URLs. 
+  * New upstream version.
+  * Update watch file to match new github upstream.
+  * Bump standards version.
 
- -- Jamie Wilkinson <jaq@debian.org>  Thu, 22 May 2014 18:12:49 +1000
+ -- Jamie Wilkinson <jaq@debian.org>  Wed, 22 Oct 2014 10:41:44 +1100
+
+libnss-cache (0.12-1) unstable; urgency=medium
+
+  * New upstream release.  (Closes: #745258; thanks Arthur Marble). 
+  * Ignore tarballs in debian/source/options. 
+
+ -- Jamie Wilkinson <jaq@debian.org>  Thu, 22 May 2014 18:24:55 +1000
+
+libnss-cache (0.11-2) unstable; urgency=low
+
+  * Fix FTBFS with clang
+    - Fixed the potential usage of an uninitialized variable error in
+      nss_cache.c
+
+ -- Arthur Marble <arthur@info9.net>  Sat, 19 Apr 2014 16:02:56 -0500
 
 libnss-cache (0.11-1) unstable; urgency=medium
 

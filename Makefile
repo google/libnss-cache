@@ -1,6 +1,7 @@
-CC=gcc
-#CFLAGS=-Wall -Wstrict-prototypes -Werror -fPIC -DDEBUG -g -O0
-CFLAGS=-Wall -Wstrict-prototypes -Werror -fPIC
+CC ?= gcc
+CFLAGS ?= -Wall -Wstrict-prototypes -Werror
+CFLAGS += -fPIC
+LDFLAGS += -shared
 LIBRARY=libnss_cache.so.2.0
 BASE_LIBRARY=libnss_cache.so.2
 PREFIX=$(DESTDIR)/usr
@@ -79,14 +80,17 @@ getent_data: testdirs
 	getent group > $(TESTDATA)/group.cache
 	sudo getent shadow > $(TESTDATA)/shadow.cache
 
+last_pw_errno_test: test/last_pw_errno_test.c
+	$(CC) $(CFLAGS) -o $@ $^
+
 testdirs:
 	mkdir -p $(TESTDATA)
 
 $(LIBRARY): nss_cache.o
-	$(CC) -shared $(LD_SONAME) -o $(LIBRARY) $<
+	$(CC) $(CFLAGS) $(LDFLAGS) $(LD_SONAME) -o $(LIBRARY) $<
 
 clean:
-	rm -f $(LIBRARY) *.o lookup gen_getent
+	rm -f $(LIBRARY) *.o lookup gen_getent last_pw_errno_test
 	rm -rf $(TESTDATA)
 
 install: all 

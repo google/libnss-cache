@@ -36,23 +36,17 @@ static int getpwent_to_file(FILE *output) {
   size_t buflen = 1024;
   int errnop;
   enum nss_status ret;
-  
+
   _nss_cache_setpwent_path(PASSWD_FILE);
 
   buffer = malloc(buflen);
-  
+
   do {
     ret = _nss_cache_getpwent_r(&result, buffer, buflen, &errnop);
     if (ret == NSS_STATUS_SUCCESS) {
-      fprintf(output, "%s:%s:%d:%d:%s:%s:%s\n",
-	      result.pw_name,
-	      result.pw_passwd,
-	      result.pw_uid,
-	      result.pw_gid,
-	      result.pw_gecos,
-	      result.pw_dir,
-	      result.pw_shell
-	      );
+      fprintf(output, "%s:%s:%d:%d:%s:%s:%s\n", result.pw_name,
+              result.pw_passwd, result.pw_uid, result.pw_gid, result.pw_gecos,
+              result.pw_dir, result.pw_shell);
     }
     if (ret == NSS_STATUS_TRYAGAIN) {
       buflen = buflen * 2;
@@ -67,7 +61,6 @@ static int getpwent_to_file(FILE *output) {
   free(buffer);
 
   return 0;
-  
 }
 
 // getgrent_to_file()
@@ -82,25 +75,22 @@ static int getgrent_to_file(FILE *output) {
   int errnop;
   enum nss_status ret;
   int idx;
-  
+
   _nss_cache_setgrent_path(GROUP_FILE);
 
   buffer = malloc(buflen);
-  
+
   do {
     ret = _nss_cache_getgrent_r(&result, buffer, buflen, &errnop);
     if (ret == NSS_STATUS_SUCCESS) {
-      fprintf(output, "%s:%s:%d:",
-	      result.gr_name,
-	      result.gr_passwd,
-	      result.gr_gid
-	      );
+      fprintf(output, "%s:%s:%d:", result.gr_name, result.gr_passwd,
+              result.gr_gid);
       // unroll **gr_mem
       for (idx = 0; result.gr_mem[idx] != NULL; idx++) {
-	fprintf(output, "%s", result.gr_mem[idx]);
-	if (result.gr_mem[idx+1] != NULL) {
-	  fprintf(output, ",");
-	}
+        fprintf(output, "%s", result.gr_mem[idx]);
+        if (result.gr_mem[idx + 1] != NULL) {
+          fprintf(output, ",");
+        }
       }
       fprintf(output, "\n");
     }
@@ -117,7 +107,6 @@ static int getgrent_to_file(FILE *output) {
   free(buffer);
 
   return 0;
-  
 }
 
 // getspent_to_file()
@@ -131,52 +120,49 @@ static int getspent_to_file(FILE *output) {
   size_t buflen = 1024;
   int errnop;
   enum nss_status ret;
-  
+
   _nss_cache_setpwent_path(SHADOW_FILE);
 
   buffer = malloc(buflen);
-  
+
   do {
     ret = _nss_cache_getspent_r(&result, buffer, buflen, &errnop);
     if (ret == NSS_STATUS_SUCCESS) {
-      fprintf(output, "%s:%s:",
-	      result.sp_namp,
-	      result.sp_pwdp
-	      );
+      fprintf(output, "%s:%s:", result.sp_namp, result.sp_pwdp);
       // sigh, empty numberical fields are -1 in the struct,
       // so if necessary convert back to empty fields
       if (result.sp_lstchg != -1) {
-	fprintf(output, "%ld:", result.sp_lstchg);
+        fprintf(output, "%ld:", result.sp_lstchg);
       } else {
-	fprintf(output, ":");
+        fprintf(output, ":");
       }
       if (result.sp_min != -1) {
-	fprintf(output, "%ld:", result.sp_min);
+        fprintf(output, "%ld:", result.sp_min);
       } else {
-	fprintf(output, ":");
+        fprintf(output, ":");
       }
       if (result.sp_max != -1) {
-	fprintf(output, "%ld:", result.sp_max);
+        fprintf(output, "%ld:", result.sp_max);
       } else {
-	fprintf(output, ":");
+        fprintf(output, ":");
       }
       if (result.sp_warn != -1) {
-	fprintf(output, "%ld:", result.sp_warn);
+        fprintf(output, "%ld:", result.sp_warn);
       } else {
-	fprintf(output, ":");
+        fprintf(output, ":");
       }
       if (result.sp_inact != -1) {
-	fprintf(output, "%ld:", result.sp_inact);
+        fprintf(output, "%ld:", result.sp_inact);
       } else {
-	fprintf(output, ":");
+        fprintf(output, ":");
       }
       if (result.sp_expire != -1) {
-	fprintf(output, "%ld:", result.sp_expire);
+        fprintf(output, "%ld:", result.sp_expire);
       } else {
-	fprintf(output, ":");
+        fprintf(output, ":");
       }
       if (result.sp_flag != -1) {
-	fprintf(output, "%ld", result.sp_flag);
+        fprintf(output, "%ld", result.sp_flag);
       }
       fprintf(output, "\n");
     }
@@ -193,7 +179,6 @@ static int getspent_to_file(FILE *output) {
   free(buffer);
 
   return 0;
-  
 }
 
 // gen_getpwent_data()
@@ -219,7 +204,6 @@ static int gen_getpwent_data(void) {
   fclose(output);
 
   return ret;
-
 }
 
 // gen_getgrent_data()
@@ -245,7 +229,6 @@ static int gen_getgrent_data(void) {
   fclose(output);
 
   return ret;
-
 }
 
 // gen_getspent_data()
@@ -271,7 +254,6 @@ static int gen_getspent_data(void) {
   fclose(output);
 
   return ret;
-
 }
 
 // main()
@@ -303,7 +285,6 @@ int main(void) {
   }
 
   printf("generated all files.\n");
-  
-  return failed_tests;
 
+  return failed_tests;
 }
