@@ -1,5 +1,7 @@
-`libnss-cache` is a NSS module for locally-cached directory service information for Linux hosts.
+`libnss-cache` is a NSS module for reading directory service information for Linux hosts from an indexed, local disk cache of that directory service.
 
-It is paired with http://github.com/google/nsscache, a tool that asynchronously synchronises the local NSS database with remote directory services.
+It is paired with https://github.com/google/nsscache, a tool that asynchronously synchronises the local NSS database with remote directory services.
 
-Mailing list: http://groups.google.com/group/nsscache-discuss
+Mailing list: https://groups.google.com/forum/#!forum/nsscache-discuss
+
+Issue history is at https://code.google.com/p/nsscache/issues/list
