@@ -1,5 +1,5 @@
 CC ?= gcc
-CFLAGS ?= -Wall -Wstrict-prototypes -Werror
+CFLAGS ?= -Wall -Wstrict-prototypes
 CFLAGS += -fPIC
 LDFLAGS += -shared
 LIBRARY=libnss_cache.so.2.0
