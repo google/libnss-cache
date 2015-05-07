@@ -109,6 +109,7 @@ static int getgrent_to_file(FILE *output) {
   return 0;
 }
 
+#ifndef BSD
 // getspent_to_file()
 // Call the nss_cache getspent function to dump the shadow store to a
 // file.
@@ -180,6 +181,7 @@ static int getspent_to_file(FILE *output) {
 
   return 0;
 }
+#endif // ifndef BSD
 
 // gen_getpwent_data()
 //
@@ -231,6 +233,7 @@ static int gen_getgrent_data(void) {
   return ret;
 }
 
+#ifndef BSD
 // gen_getspent_data()
 //
 // creates a copy of the shadow map as read by nss_cache.c
@@ -255,6 +258,7 @@ static int gen_getspent_data(void) {
 
   return ret;
 }
+#endif // ifndef BSD
 
 // main()
 //
@@ -278,11 +282,13 @@ int main(void) {
     failed_tests = failed_tests + 1;
   }
 
+#ifndef BSD
   ret = gen_getspent_data();
   if (ret != 0) {
     fprintf(stderr, "Failed to generate password file.\n");
     failed_tests = failed_tests + 1;
   }
+#endif
 
   printf("generated all files.\n");
 
