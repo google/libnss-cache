@@ -90,7 +90,7 @@ $(LIBRARY): nss_cache.o compat/getpwent_r.o compat/getgrent_r.o
 	$(CC) $(CFLAGS) $(LDFLAGS) $(LD_SONAME) -o $(LIBRARY) $+
 
 clean:
-	rm -f $(LIBRARY) *.o lookup gen_getent last_pw_errno_test
+	rm -f $(LIBRARY) *.o compat/*.o lookup gen_getent last_pw_errno_test
 	rm -rf $(TESTDATA)
 
 install: all 
