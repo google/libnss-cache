@@ -27,7 +27,7 @@
 
 #include <sys/param.h>
 
-#ifdef __FreeBSD__
+#ifdef BSD
 
 #include <pwd.h>
 #include <stdio.h>
@@ -97,4 +97,4 @@ int fgetpwent_r(FILE *f, struct passwd *pw, char *line, size_t size, struct pass
 	return __fgetpwent_a(f, pw, &line, &size, res);
 }
 
-#endif // ifdef __FreeBSD__
+#endif // ifdef BSD

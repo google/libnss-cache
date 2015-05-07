@@ -40,13 +40,13 @@ static FILE *p_file = NULL;
 static FILE *g_file = NULL;
 static char p_filename[NSS_CACHE_PATH_LENGTH] = "/etc/passwd.cache";
 static char g_filename[NSS_CACHE_PATH_LENGTH] = "/etc/group.cache";
-#ifndef __FreeBSD__
+#ifndef BSD
 static FILE *s_file = NULL;
 static char s_filename[NSS_CACHE_PATH_LENGTH] = "/etc/shadow.cache";
 #else
 extern int fgetpwent_r(FILE *, struct passwd *, char *, size_t, struct passwd **);
 extern int fgetgrent_r(FILE *, struct group *, char *, size_t, struct group **);
-#endif // ifndef __FreeBSD__
+#endif // ifndef BSD
 
 /* Common return code routine for all *ent_r_locked functions.
  * We need to return TRYAGAIN if the underlying files guy raises ERANGE,
@@ -739,7 +739,7 @@ enum nss_status _nss_cache_getgrnam_r(const char *name, struct group *result,
 //
 //  Routines for shadow map defined here.
 //
-#ifndef __FreeBSD__
+#ifndef BSD
 
 // _nss_cache_setspent_path()
 // Helper function for testing
@@ -931,4 +931,4 @@ enum nss_status _nss_cache_getspnam_r(const char *name, struct spwd *result,
 }
 #else
 #include "bsdnss.c"
-#endif // ifndef __FreeBSD__
+#endif // ifndef BSD

@@ -30,9 +30,9 @@
 #include <time.h>
 #include <unistd.h>
 
-#ifndef __FreeBSD__
+#ifndef BSD
 #include <shadow.h>
-#endif // ifndef __FreeBSD__
+#endif // ifndef BSD
 
 #ifndef NSS_CACHE_H
 #define NSS_CACHE_H
@@ -52,9 +52,9 @@
 #define NSS_CACHE_PATH_LENGTH 255
 extern char *_nss_cache_setpwent_path(const char *path);
 extern char *_nss_cache_setgrent_path(const char *path);
-#ifndef __FreeBSD__
+#ifndef BSD
 extern char *_nss_cache_setspent_path(const char *path);
-#endif // ifndef __FreeBSD__
+#endif // ifndef BSD
 
 enum nss_cache_match {
   NSS_CACHE_EXACT = 0,

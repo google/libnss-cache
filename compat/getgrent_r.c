@@ -27,7 +27,7 @@
 
 #include <sys/param.h>
 
-#ifdef __FreeBSD__
+#ifdef BSD
 
 #include <grp.h>
 #include <stdio.h>
@@ -114,4 +114,4 @@ int fgetgrent_r(FILE *f, struct group *gr, char *line, size_t size, struct group
 	return __getgrent_a(f, gr, &line, &size, &mem, &nmem, res);
 }
 
-#endif // ifdef __FreeBSD__
+#endif // ifdef BSD
