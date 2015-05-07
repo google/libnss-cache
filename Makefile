@@ -86,8 +86,8 @@ last_pw_errno_test: test/last_pw_errno_test.c
 testdirs:
 	mkdir -p $(TESTDATA)
 
-$(LIBRARY): nss_cache.o
-	$(CC) $(CFLAGS) $(LDFLAGS) $(LD_SONAME) -o $(LIBRARY) $<
+$(LIBRARY): nss_cache.o compat/getpwent_r.o compat/getgrent_r.o
+	$(CC) $(CFLAGS) $(LDFLAGS) $(LD_SONAME) -o $(LIBRARY) $+
 
 clean:
 	rm -f $(LIBRARY) *.o lookup gen_getent last_pw_errno_test
