@@ -21,14 +21,18 @@
 #include <nss.h>
 #include <stdlib.h>
 #include <pwd.h>
-#include <shadow.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/param.h>
 #include <time.h>
 #include <unistd.h>
+
+#ifndef BSD
+#include <shadow.h>
+#endif // ifndef BSD
 
 #ifndef NSS_CACHE_H
 #define NSS_CACHE_H
@@ -48,7 +52,9 @@
 #define NSS_CACHE_PATH_LENGTH 255
 extern char *_nss_cache_setpwent_path(const char *path);
 extern char *_nss_cache_setgrent_path(const char *path);
+#ifndef BSD
 extern char *_nss_cache_setspent_path(const char *path);
+#endif // ifndef BSD
 
 enum nss_cache_match {
   NSS_CACHE_EXACT = 0,
