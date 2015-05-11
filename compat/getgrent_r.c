@@ -79,7 +79,8 @@ int fgetgrent_r(FILE *f, struct group *gr, char *line, size_t size, struct group
 	for (nmem=!!*s; *s; s++)
 		if (*s==',') ++nmem;
 
-	remain = (void *) &line[size] - (void *) &line[ep+1];
+	++ep;
+	remain = (void *) &line[size] - (void *) &line[ep];
 	need = (sizeof(char *) * (nmem+1)) + ALIGNBYTES;
 	if (need > remain) {
 		rv = ERANGE;
@@ -87,8 +88,8 @@ int fgetgrent_r(FILE *f, struct group *gr, char *line, size_t size, struct group
 		gr = 0;
 		goto end;
 	}
-	memset(&line[ep+1], 0, need);
-	gr->gr_mem = (char **) ALIGN(&line[ep+1]);
+	memset(&line[ep], 0, need);
+	gr->gr_mem = (char **) ALIGN(&line[ep]);
 
 	if (*mems) {
 		gr->gr_mem[0] = mems;
