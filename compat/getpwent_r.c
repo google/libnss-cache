@@ -23,6 +23,7 @@
  *  ----------------------------------------------------------------------
  *
  *  Adapted from http://www.musl-libc.org/ for libnss-cache
+ *  Copyright © 2015 Kevin Bowling <k@kev009.com>
  */
 
 #include <sys/param.h>
@@ -32,7 +33,6 @@
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
 #include <errno.h>
 #include <string.h>
 
@@ -43,28 +43,21 @@ static unsigned atou(char **s)
 	return x;
 }
 
-int __fgetpwent_a(FILE *f, struct passwd *pw, char **line, size_t *size, struct passwd **res)
+int fgetpwent_r(FILE *f, struct passwd *pw, char *line, size_t size, struct passwd **res)
 {
-	/* LIBNSS_CACHE_DEL ssize_t l; */
 	char *s;
 	int rv = 0;
-	int cs;
-	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cs);
 	for (;;) {
-		line[0][(*size)-1] = '\xff';
-		/* LIBNSS_CACHE_DEL if ((l=getline(line, size, f)) < 0) { */
-		if ( (fgets(*line, *size, f) == NULL) || ferror(f) || (line[0][(*size)-1] != '\xff') ) {
-			/* LIBNSS_CACHE_DIFF rv = ferror(f) ? errno : 0; */
-			rv = (line[0][(*size)-1] != '\xff') ? ERANGE : ENOENT;
-			/* LIBNSS_CACHE_DEL free(*line); */
-			*line = 0;
+		line[size-1] = '\xff';
+		if ( (fgets(line, size, f) == NULL) || ferror(f) || line[size-1] != '\xff' ) {
+			rv = (line[size-1] != '\xff') ? ERANGE : ENOENT;
+			line = 0;
 			pw = 0;
 			break;
 		}
-		/* LIBNSS_CACHE_DEL line[0][l-1] = 0; */
-		line[0][strcspn(line[0], "\n")] = 0;
+		line[strcspn(line, "\n")] = 0;
 
-		s = line[0];
+		s = line;
 		pw->pw_name = s++;
 		if (!(s = strchr(s, ':'))) continue;
 
@@ -86,15 +79,9 @@ int __fgetpwent_a(FILE *f, struct passwd *pw, char **line, size_t *size, struct 
 		*s++ = 0; pw->pw_shell = s;
 		break;
 	}
-	pthread_setcancelstate(cs, 0);
 	*res = pw;
 	if (rv) errno = rv;
 	return rv;
-}
-
-int fgetpwent_r(FILE *f, struct passwd *pw, char *line, size_t size, struct passwd **res)
-{
-	return __fgetpwent_a(f, pw, &line, &size, res);
 }
 
 #endif // ifdef BSD

@@ -23,6 +23,7 @@
  *  ----------------------------------------------------------------------
  *
  *  Adapted from http://www.musl-libc.org/ for libnss-cache
+ *  Copyright © 2015 Kevin Bowling <k@kev009.com>
  */
 
 #include <sys/param.h>
@@ -30,13 +31,11 @@
 #ifdef BSD
 
 #include <grp.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
 #include <errno.h>
 #include <string.h>
-
-static char **mem;
 
 static unsigned atou(char **s)
 {
@@ -45,29 +44,25 @@ static unsigned atou(char **s)
 	return x;
 }
 
-int __getgrent_a(FILE *f, struct group *gr, char **line, size_t *size, char ***mem, size_t *nmem, struct group **res)
+int fgetgrent_r(FILE *f, struct group *gr, char *line, size_t size, struct group **res)
 {
-	/* LIBNSS_CACHE_DEL ssize_t l; */
 	char *s, *mems;
-	size_t i;
+	size_t i, nmem, need;
 	int rv = 0;
-	int cs;
-	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cs);
+	int ep;
+	ptrdiff_t remain;
 	for (;;) {
-		line[0][(*size)-1] = '\xff';
-		/* LIBNSS_CACHE_DIFF if ((l=getline(line, size, f)) < 0) { */
-		if ( (fgets(*line, *size, f) == NULL) || ferror(f) || (line[0][(*size)-1] != '\xff') ) {
-			/* LIBNSS_CACHE_DIFF rv = ferror(f) ? errno : 0; */
-			rv = (line[0][(*size)-1] != '\xff') ? ERANGE : ENOENT;
-			/* LIBNSS_CACHE_DEL free(*line); */
-			*line = 0;
+		line[size-1] = '\xff';
+		if ( (fgets(line, size, f) == NULL) || ferror(f) || (line[size-1] != '\xff') ) {
+			rv = (line[size-1] != '\xff') ? ERANGE : ENOENT;
+			line = 0;
 			gr = 0;
 			goto end;
 		}
-		/* LIBNSS_CACHE_DEL line[0][l-1] = 0; */
-		line[0][strcspn(line[0], "\n")] = 0;
+		ep = strcspn(line, "\n");
+		line[ep] = 0;
 
-		s = line[0];
+		s = line;
 		gr->gr_name = s++;
 		if (!(s = strchr(s, ':'))) continue;
 
@@ -81,37 +76,32 @@ int __getgrent_a(FILE *f, struct group *gr, char **line, size_t *size, char ***m
 		break;
 	}
 
-	for (*nmem=!!*s; *s; s++)
-		if (*s==',') ++*nmem;
-	free(*mem);
-	*mem = calloc(sizeof(char *), *nmem+1);
-	if (!*mem) {
-		rv = errno;
-		/* LIBNSS_CACHE_DEL free(*line); */
-		*line = 0;
-		/* LIBNSS_CACHE_DIFF return 0; */
-		return rv;
+	for (nmem=!!*s; *s; s++)
+		if (*s==',') ++nmem;
+
+	remain = (void *) &line[size-1] - (void *) &line[ep+1];
+	need = (sizeof(char *) * (nmem+1)) + ALIGNBYTES;
+	if (need > remain) {
+		rv = ERANGE;
+		line = 0;
+		gr = 0;
+		goto end;
 	}
+	memset(&line[ep+1], 0, need);
+	gr->gr_mem = (char **) ALIGN(&line[ep+1]);
+
 	if (*mems) {
-		mem[0][0] = mems;
+		gr->gr_mem[0] = mems;
 		for (s=mems, i=0; *s; s++)
-			if (*s==',') *s++ = 0, mem[0][++i] = s;
-		mem[0][++i] = 0;
+			if (*s==',') *s++ = 0, gr->gr_mem[++i] = s;
+		gr->gr_mem[++i] = 0;
 	} else {
-		mem[0][0] = 0;
+		gr->gr_mem[0] = 0;
 	}
-	gr->gr_mem = *mem;
 end:
-	pthread_setcancelstate(cs, 0);
 	*res = gr;
 	if(rv) errno = rv;
 	return rv;
-}
-
-int fgetgrent_r(FILE *f, struct group *gr, char *line, size_t size, struct group **res)
-{
-	size_t nmem=0;
-	return __getgrent_a(f, gr, &line, &size, &mem, &nmem, res);
 }
 
 #endif // ifdef BSD
