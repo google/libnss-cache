@@ -1,6 +1,6 @@
 CC ?= gcc
 CFLAGS ?= -Wall -Wstrict-prototypes
-CFLAGS += -fPIC -pthread
+CFLAGS += -fPIC
 LDFLAGS += -shared
 LIBRARY=libnss_cache.so.2.0
 BASE_LIBRARY=libnss_cache.so.2
