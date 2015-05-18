@@ -1,5 +1,5 @@
 CC ?= gcc
-CFLAGS ?= -Wall -Wstrict-prototypes -Werror
+CFLAGS ?= -Wall -Wstrict-prototypes
 CFLAGS += -fPIC
 LDFLAGS += -shared
 LIBRARY=libnss_cache.so.2.0
@@ -10,6 +10,8 @@ SONAME=libnss_cache.so.2
 LD_SONAME=-Wl,-soname,$(SONAME)
 TESTDATA=.testdata
 
+LIBNSSCACHE = nss_cache.o compat/getpwent_r.o compat/getgrent_r.o
+
 SOURCES = Makefile gen_getent.c lookup.c nss_cache.c nss_cache.h nss_test.h COPYING version libnss-cache.spec
 VERSION = $(shell cat version)
 
@@ -17,7 +19,7 @@ all: $(LIBRARY)
 
 check: test_getent time_lookups
 
-lookup: lookup.o nss_cache.o
+lookup: lookup.o $(LIBNSSCACHE)
 	$(CC) $(CFLAGS) -o $@ $^
 
 time_lookups: testdirs lookup_data lookup
@@ -53,7 +55,7 @@ time_lookups: testdirs lookup_data lookup
 	../vendetta/files/gen_cache.py $(TESTDATA)/shadow.cache 1 $(TESTDATA)/shadow.cache.ixname
 	time -f %E lookup -c getspnam -f $(TESTDATA)/rand_spnames
 
-gen_getent: gen_getent.o nss_cache.o
+gen_getent: gen_getent.o $(LIBNSSCACHE)
 	$(CC) -o $@ $^
 
 
@@ -86,14 +88,14 @@ last_pw_errno_test: test/last_pw_errno_test.c
 testdirs:
 	mkdir -p $(TESTDATA)
 
-$(LIBRARY): nss_cache.o
-	$(CC) $(CFLAGS) $(LDFLAGS) $(LD_SONAME) -o $(LIBRARY) $<
+$(LIBRARY): $(LIBNSSCACHE)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(LD_SONAME) -o $(LIBRARY) $+
 
 clean:
-	rm -f $(LIBRARY) *.o lookup gen_getent last_pw_errno_test
+	rm -f $(LIBRARY) *.o compat/*.o lookup gen_getent last_pw_errno_test
 	rm -rf $(TESTDATA)
 
-install: all 
+install: all
 	install -d $(LIBDIR)
 	install $(LIBRARY) $(LIBDIR)
 	ln -sf $(LIBRARY) $(LIBDIR)/$(BASE_LIBRARY)
