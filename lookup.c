@@ -207,6 +207,7 @@ static int getgrgid_wrapper(gid_t gid) {
   return found;
 }
 
+#ifndef BSD
 // getspnam_wrapper()
 //
 // perform a getspnam() lookup via nss_cache.c directly
@@ -247,6 +248,7 @@ static int getspnam_wrapper(char *name) {
 
   return found;
 }
+#endif // ifndef BSD
 
 // lookup_getpwnam()
 //
@@ -372,6 +374,7 @@ static int lookup_getgrgid(FILE *input) {
   return ret;
 }
 
+#ifndef BSD
 // lookup_getspnam()
 //
 // call getspnam() from nss_cache.c on each line of a file
@@ -402,6 +405,7 @@ static int lookup_getspnam(FILE *input) {
 
   return ret;
 }
+#endif // ifndef BSD
 
 // nss_lookup()
 //
@@ -419,8 +423,10 @@ static int nss_lookup(char *call, FILE *input) {
     ret = lookup_getgrnam(input);
   } else if (strncmp(call, "getgrgid", 8) == 0) {
     ret = lookup_getgrgid(input);
+#ifndef BSD
   } else if (strncmp(call, "getspnam", 8) == 0) {
     ret = lookup_getspnam(input);
+#endif // ifndef BSD
   } else {
     fprintf(stderr, "unknown nss function: %s\n", call);
     ret = 1;
