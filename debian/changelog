@@ -1,9 +1,9 @@
-libnss-cache (0.15-1) UNRELEASED; urgency=medium
+libnss-cache (0.15-1) unstable; urgency=medium
 
   * New upstream release.
   * Change obsolete homepage URL.
 
- -- Jamie Wilkinson <jaq@debian.org>  Wed, 30 Dec 2015 15:37:35 +1100
+ -- Jamie Wilkinson <jaq@debian.org>  Wed, 30 Dec 2015 16:20:07 +1100
 
 libnss-cache (0.14-1) unstable; urgency=medium
 
