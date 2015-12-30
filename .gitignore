@@ -6,6 +6,7 @@ last_pw_errno_test
 *.so.*
 lookup
 gen_getent
+debian/.debhelper
 debian/files
 debian/libnss-cache.debhelper.log
 debian/libnss-cache.postinst.debhelper
