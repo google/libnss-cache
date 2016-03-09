@@ -33,7 +33,7 @@ make LIBDIR="%{buildroot}%{_libdir}" install
 
 %files
 %defattr(-, root, root, 0755)
-%{_libdir}
+%{_libdir}/*
 
 %changelog
 * Mon Mar 07 2016 Kevin Bowling <kbowling@freebsd.org> - 0.15-1
