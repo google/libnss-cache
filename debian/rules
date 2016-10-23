@@ -9,7 +9,16 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
+include /usr/share/dpkg/default.mk
+
+DESTDIR=$(CURDIR)/debian/libnss-cache
+LIBDIR=$(DESTDIR)/usr/lib/$(DEB_HOST_MULTIARCH)
+
 %:
 	dh $@
+
+override_dh_auto_install:
+	mkdir -p $(LIBDIR)
+	dh_auto_install -- LIBDIR=$(LIBDIR)
 
 override_dh_auto_test:
