@@ -1,3 +1,9 @@
+libnss-cache (0.16-2) unstable; urgency=medium
+
+  * Bump standards version. 
+
+ -- Jamie Wilkinson <jaq@debian.org>  Tue, 01 Nov 2016 16:04:27 +1100
+
 libnss-cache (0.16-1) unstable; urgency=medium
 
   * New upstream release.
