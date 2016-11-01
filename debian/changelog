@@ -1,3 +1,9 @@
+libnss-cache (0.16-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Jamie Wilkinson <jaq@debian.org>  Tue, 01 Nov 2016 15:39:14 +1100
+
 libnss-cache (0.15-2) unstable; urgency=medium
 
   * Fix nss.h include for BSD.
