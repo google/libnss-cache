@@ -1,3 +1,9 @@
+libnss-cache (0.16-3) unstable; urgency=medium
+
+  * Add missing Multi-Arch header to debian/control. 
+
+ -- Jamie Wilkinson <jaq@debian.org>  Mon, 07 Nov 2016 15:18:25 +1100
+
 libnss-cache (0.16-2) unstable; urgency=medium
 
   * Bump standards version. 
