@@ -39,7 +39,6 @@
 // print out flags and arguments
 
 static void usage(char *program) {
-
   fprintf(stderr, "Usage: %s -c nss_function -f filename\n", program);
 }
 
@@ -48,7 +47,6 @@ static void usage(char *program) {
 // perform a getpwnam() lookup via nss_cache.c directly
 
 static int getpwnam_wrapper(char *name) {
-
   struct passwd result;
   char *buffer = NULL;
   size_t buflen = 1024;
@@ -89,7 +87,6 @@ static int getpwnam_wrapper(char *name) {
 // perform a getpwui() lookup via nss_cache.c directly
 
 static int getpwuid_wrapper(uid_t uid) {
-
   struct passwd result;
   char *buffer = NULL;
   size_t buflen = 1024;
@@ -130,7 +127,6 @@ static int getpwuid_wrapper(uid_t uid) {
 // perform a getgrnam() lookup via nss_cache.c directly
 
 static int getgrnam_wrapper(char *name) {
-
   struct group result;
   char *buffer = NULL;
   size_t buflen = 1024;
@@ -171,7 +167,6 @@ static int getgrnam_wrapper(char *name) {
 // perform a getgrgid() lookup via nss_cache.c directly
 
 static int getgrgid_wrapper(gid_t gid) {
-
   struct group result;
   char *buffer = NULL;
   size_t buflen = 1024;
@@ -213,7 +208,6 @@ static int getgrgid_wrapper(gid_t gid) {
 // perform a getspnam() lookup via nss_cache.c directly
 
 static int getspnam_wrapper(char *name) {
-
   struct spwd result;
   char *buffer = NULL;
   size_t buflen = 1024;
@@ -248,14 +242,13 @@ static int getspnam_wrapper(char *name) {
 
   return found;
 }
-#endif // ifndef BSD
+#endif  // ifndef BSD
 
 // lookup_getpwnam()
 //
 // call getpwnam() from nss_cache.c on each line of a file
 
 static int lookup_getpwnam(FILE *input) {
-
   int lines = 0;
   char line[255];
   int ret;
@@ -286,7 +279,6 @@ static int lookup_getpwnam(FILE *input) {
 // call getpwuid() from nss_cache.c on each line of a file
 
 static int lookup_getpwuid(FILE *input) {
-
   int lines = 0;
   char line[255];
   int ret;
@@ -317,7 +309,6 @@ static int lookup_getpwuid(FILE *input) {
 // call getgrnam() from nss_cache.c on each line of a file
 
 static int lookup_getgrnam(FILE *input) {
-
   int lines = 0;
   char line[255];
   int ret;
@@ -348,7 +339,6 @@ static int lookup_getgrnam(FILE *input) {
 // call getgrgid() from nss_cache.c on each line of a file
 
 static int lookup_getgrgid(FILE *input) {
-
   int lines = 0;
   char line[255];
   int ret;
@@ -380,7 +370,6 @@ static int lookup_getgrgid(FILE *input) {
 // call getspnam() from nss_cache.c on each line of a file
 
 static int lookup_getspnam(FILE *input) {
-
   int lines = 0;
   char line[255];
   int ret;
@@ -405,14 +394,13 @@ static int lookup_getspnam(FILE *input) {
 
   return ret;
 }
-#endif // ifndef BSD
+#endif  // ifndef BSD
 
 // nss_lookup()
 //
 // call the nss lookup wrapper that was set by getopt()
 
 static int nss_lookup(char *call, FILE *input) {
-
   int ret;
 
   if (strncmp(call, "getpwnam", 8) == 0) {
@@ -426,7 +414,7 @@ static int nss_lookup(char *call, FILE *input) {
 #ifndef BSD
   } else if (strncmp(call, "getspnam", 8) == 0) {
     ret = lookup_getspnam(input);
-#endif // ifndef BSD
+#endif  // ifndef BSD
   } else {
     fprintf(stderr, "unknown nss function: %s\n", call);
     ret = 1;
@@ -442,7 +430,6 @@ static int nss_lookup(char *call, FILE *input) {
 // function on each line in the file and track success.
 
 int main(int argc, char **argv) {
-
   char *call = NULL;
   char *filename = NULL;
   FILE *input = NULL;
@@ -451,12 +438,12 @@ int main(int argc, char **argv) {
 
   while ((c = getopt(argc, argv, "c:f:")) != -1) {
     switch (c) {
-    case 'c':
-      call = optarg;
-      break;
-    case 'f':
-      filename = optarg;
-      break;
+      case 'c':
+        call = optarg;
+        break;
+      case 'f':
+        filename = optarg;
+        break;
     }
   }
 
