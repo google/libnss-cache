@@ -24,7 +24,7 @@
 
 #include <sys/mman.h>
 
-// Locking implementation: use pthreads.
+/* Locking implementation: use pthreads. */
 #include <pthread.h>
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 #define NSS_CACHE_LOCK()                                                       \
@@ -46,7 +46,7 @@ static char s_filename[NSS_CACHE_PATH_LENGTH] = "/etc/shadow.cache";
 #else
 extern int fgetpwent_r(FILE *, struct passwd *, char *, size_t, struct passwd **);
 extern int fgetgrent_r(FILE *, struct group *, char *, size_t, struct group **);
-#endif // ifndef BSD
+#endif /* ifndef BSD */
 
 /* Common return code routine for all *ent_r_locked functions.
  * We need to return TRYAGAIN if the underlying files guy raises ERANGE,
