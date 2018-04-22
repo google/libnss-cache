@@ -60,7 +60,7 @@ enum nss_cache_match {
   NSS_CACHE_EXACT = 0,
   NSS_CACHE_HIGH = 1,
   NSS_CACHE_LOW = 2,
-  NSS_CACHE_ERROR = 3,
+  NSS_CACHE_ERROR = 3
 };
 
 struct nss_cache_args {
