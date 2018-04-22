@@ -73,7 +73,7 @@ static inline enum nss_status _nss_cache_ent_bad_return_code(int errnoval) {
 // Binary search routines below here
 //
 
-int _nss_cache_bsearch2_compare(const void *key, const void *value) {
+static int _nss_cache_bsearch2_compare(const void *key, const void *value) {
   struct nss_cache_args *args = (struct nss_cache_args *)key;
   const char *value_text = (const char *)value;
 
