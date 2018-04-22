@@ -10,6 +10,7 @@ Vcs-Git: https://github.com/google/libnss-cache -b debian
 
 Package: libnss-cache
 Architecture: any
+Multi-Arch: same
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Recommends: nsscache
 Description: NSS module for using nsscache-generated files
