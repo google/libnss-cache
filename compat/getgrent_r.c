@@ -26,9 +26,9 @@
  *  Copyright © 2015 Kevin Bowling <k@kev009.com>
  */
 
-#include <sys/param.h>
-
-#ifdef BSD
+// This compat layer is only built for BSD, or Linux without the GNU C
+// Library.
+#if defined(BSD) || (defined(__linux__) && !defined(__GLIBC__))
 
 #include <grp.h>
 #include <stddef.h>
@@ -37,6 +37,16 @@
 #include <errno.h>
 #include <string.h>
 
+#if defined(BSD)
+#include <sys/param.h>
+#else
+// This branch is necessarily Linux and not GNU because of the checks
+// defined above that guard the rest of the compat layer.  On Linux we
+// don't pull in param.h as it is very obsolete.
+#include <stdint.h>
+#define ALIGNBYTES _Alignof(max_align_t)
+#define ALIGN(p)(((uintptr_t)(p) + ALIGNBYTES & ~ALIGNBYTES))
+#endif // defined(BSD)
 static unsigned atou(char **s)
 {
 	unsigned x;
@@ -104,5 +114,4 @@ end:
 	if(rv) errno = rv;
 	return rv;
 }
-
-#endif // ifdef BSD
+#endif //#if defined(BSD) || defined(__LINUX__) && !defined(__GLIBC__)
