@@ -26,9 +26,9 @@
  *  Copyright © 2015 Kevin Bowling <k@kev009.com>
  */
 
-#include <sys/param.h>
-
-#ifdef BSD
+// This compat layer is only built for BSD, or Linux without the GNU C
+// Library.
+#if defined(BSD) || (defined(__linux__) && !defined(__GLIBC__))
 
 #include <pwd.h>
 #include <stdio.h>
@@ -83,5 +83,4 @@ int fgetpwent_r(FILE *f, struct passwd *pw, char *line, size_t size, struct pass
 	if (rv) errno = rv;
 	return rv;
 }
-
-#endif // ifdef BSD
+#endif //#if defined(BSD) || defined(__LINUX__) && !defined(__GLIBC__)
