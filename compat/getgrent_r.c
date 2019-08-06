@@ -36,17 +36,10 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
-
-#if defined(BSD)
-#include <sys/param.h>
-#else
-// This branch is necessarily Linux and not GNU because of the checks
-// defined above that guard the rest of the compat layer.  On Linux we
-// don't pull in param.h as it is very obsolete.
 #include <stdint.h>
-#define ALIGNBYTES _Alignof(max_align_t)
+
+#define ALIGNBYTES (sizeof(uintptr_t) - 1)
 #define ALIGN(p)(((uintptr_t)(p) + ALIGNBYTES & ~ALIGNBYTES))
-#endif // defined(BSD)
 static unsigned atou(char **s)
 {
 	unsigned x;
