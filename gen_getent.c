@@ -119,7 +119,7 @@ static int getspent_to_file(FILE *output) {
   int errnop;
   enum nss_status ret;
 
-  _nss_cache_setpwent_path(SHADOW_FILE);
+  _nss_cache_setspent_path(SHADOW_FILE);
 
   buffer = malloc(buflen);
 

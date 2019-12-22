@@ -730,7 +730,7 @@ enum nss_status _nss_cache_getgrnam_r(const char *name, struct group *result,
 //
 //  Routines for shadow map defined here.
 //
-#if defined(__LINUX__) && defined(__GLIBC__)
+#if defined(__linux__) && defined(__GLIBC__)
 // This is only built on GLIBC as caching the shadow file is generally
 // not permissable from the perspective of other libc's, so the
 // symbols are simply unused in those environments.
@@ -747,7 +747,7 @@ extern char *_nss_cache_setspent_path(const char *path) {
 // Internal setup routine
 
 static enum nss_status _nss_cache_setspent_locked(void) {
-  DEBUG("%s %s\n", "Opening", g_filename);
+  DEBUG("%s %s\n", "Opening", s_filename);
   s_file = fopen(s_filename, "r");
 
   if (s_file) {
@@ -922,4 +922,4 @@ enum nss_status _nss_cache_getspnam_r(const char *name, struct spwd *result,
 
 #ifdef BSD
 #include "bsdnss.c"
-#endif  // #if defined(__LINUX__) && defined(__GLIBC__)
+#endif  // #if defined(__linux__) && defined(__GLIBC__)

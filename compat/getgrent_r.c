@@ -107,4 +107,4 @@ end:
 	if(rv) errno = rv;
 	return rv;
 }
-#endif //#if defined(BSD) || defined(__LINUX__) && !defined(__GLIBC__)
+#endif //#if defined(BSD) || defined(__linux__) && !defined(__GLIBC__)
