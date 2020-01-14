@@ -6,7 +6,7 @@ Build-Depends: debhelper-compat (= 12)
 Standards-Version: 3.9.8
 Homepage: https://github.com/google/libnss-cache
 Vcs-Browser: https://github.com/google/libnss-cache/tree/debian
-Vcs-Git: https://github.com/google/libnss-cache -b debian
+Vcs-Git: https://github.com/google/libnss-cache.git -b debian
 
 Package: libnss-cache
 Architecture: any
