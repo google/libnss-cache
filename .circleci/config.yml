@@ -6,7 +6,7 @@ jobs:
     steps:
       - restore_cache:
           key: apt-{{ .Branch }}
-      - run: apt update && apt install -y build-essential git
+      - run: apt update && apt install -y build-essential git time
       - save_cache:
           key: apt-{{ .Branch }}
           paths:
