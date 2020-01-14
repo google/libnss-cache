@@ -1,5 +1,6 @@
-libnss-cache (0.16-4) UNRELEASED; urgency=medium
+libnss-cache (0.17-1) UNRELEASED; urgency=medium
 
+  * New upstram release.
   * Trim trailing whitespace.
   * Bump debhelper from old 9 to 12.
   * Set debhelper-compat version in Build-Depends.
