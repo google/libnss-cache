@@ -1,4 +1,4 @@
-#include <nsswitch.h>
+#include <nss.h>
 
 NSS_METHOD_PROTOTYPE(__nss_compat_getpwnam_r);
 NSS_METHOD_PROTOTYPE(__nss_compat_getpwuid_r);
