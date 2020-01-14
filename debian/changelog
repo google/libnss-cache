@@ -1,6 +1,4 @@
-libnss-cache (0.17-1~4.gbpa8fa74) UNRELEASED; urgency=medium
-
-  ** SNAPSHOT build @a8fa74817601d2e070eb5bb4c1b07c08b087f6de **
+libnss-cache (0.17-1) unstable; urgency=medium
 
   * New upstram release.
   * Trim trailing whitespace.
@@ -9,8 +7,9 @@ libnss-cache (0.17-1~4.gbpa8fa74) UNRELEASED; urgency=medium
   * Use canonical URL in Vcs-Git.
   * Update standards-version to 4.4.0.
   * Add build hardening flags.
+  * Run the test suite now one exists.
 
- -- Jamie Wilkinson <jaq@debian.org>  Tue, 14 Jan 2020 16:03:27 +1100
+ -- Jamie Wilkinson <jaq@debian.org>  Tue, 14 Jan 2020 16:08:39 +1100
 
 libnss-cache (0.16-3) unstable; urgency=medium
 
