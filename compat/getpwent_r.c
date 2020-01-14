@@ -83,4 +83,4 @@ int fgetpwent_r(FILE *f, struct passwd *pw, char *line, size_t size, struct pass
 	if (rv) errno = rv;
 	return rv;
 }
-#endif //#if defined(BSD) || defined(__LINUX__) && !defined(__GLIBC__)
+#endif //#if defined(BSD) || defined(__linux__) && !defined(__GLIBC__)
