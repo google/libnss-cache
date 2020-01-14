@@ -4,9 +4,16 @@ jobs:
     docker:
       - image: debian:stretch
     steps:
+      - restore_cache:
+          key: apt-{{ .Branch }}
+      - run: apt update && apt install -y build-essential git
+      - save_cache:
+          key: apt-{{ .Branch }}
+          paths:
+            - "/var/cache/apt"
       - checkout
-      - run: sudo apt install -y build-essential
-      - run: make all clean
+      - run: make all
+      - run: make check
 
 workflows:
   version: 2
