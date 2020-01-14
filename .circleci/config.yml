@@ -5,7 +5,7 @@ jobs:
       - image: debian:stretch
     steps:
       - checkout
-      - sudo apt install -y build-essential
+      - run: sudo apt install -y build-essential
       - run: make all clean
 
 workflows:
