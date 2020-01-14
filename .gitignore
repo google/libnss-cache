@@ -25,3 +25,4 @@ a.out
 *.debian.tar.xz
 .testdata/
 /tmpconfig.yml
+/.ghi.yml
