@@ -17,5 +17,3 @@ LIBDIR=$(DESTDIR)/usr/lib/$(DEB_HOST_MULTIARCH)
 override_dh_auto_install:
 	mkdir -p $(LIBDIR)
 	dh_auto_install -- LIBDIR=$(LIBDIR)
-
-override_dh_auto_test:

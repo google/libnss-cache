@@ -1,14 +1,16 @@
-libnss-cache (0.17-1~1.gbp33e26d) UNRELEASED; urgency=medium
+libnss-cache (0.17-1~4.gbpa8fa74) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @33e26df38122b303b8a66149cd0d43b77ffbf805 **
+  ** SNAPSHOT build @a8fa74817601d2e070eb5bb4c1b07c08b087f6de **
 
   * New upstram release.
   * Trim trailing whitespace.
   * Bump debhelper from old 9 to 12.
   * Set debhelper-compat version in Build-Depends.
   * Use canonical URL in Vcs-Git.
+  * Update standards-version to 4.4.0.
+  * Add build hardening flags.
 
- -- Jamie Wilkinson <jaq@debian.org>  Tue, 14 Jan 2020 15:47:05 +1100
+ -- Jamie Wilkinson <jaq@debian.org>  Tue, 14 Jan 2020 16:03:27 +1100
 
 libnss-cache (0.16-3) unstable; urgency=medium
 
