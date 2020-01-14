@@ -5,7 +5,7 @@ libnss-cache (0.16-4) UNRELEASED; urgency=medium
   * Set debhelper-compat version in Build-Depends.
   * Use canonical URL in Vcs-Git.
 
- -- Jamie Wilkinson <jaq@debian.org>  Tue, 14 Jan 2020 15:45:13 +1100
+ -- Jamie Wilkinson <jaq@debian.org>  Tue, 14 Jan 2020 15:45:26 +1100
 
 libnss-cache (0.16-3) unstable; urgency=medium
 

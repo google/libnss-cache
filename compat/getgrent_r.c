@@ -26,9 +26,9 @@
  *  Copyright © 2015 Kevin Bowling <k@kev009.com>
  */
 
-#include <sys/param.h>
-
-#ifdef BSD
+// This compat layer is only built for BSD, or Linux without the GNU C
+// Library.
+#if defined(BSD) || (defined(__linux__) && !defined(__GLIBC__))
 
 #include <grp.h>
 #include <stddef.h>
@@ -36,7 +36,10 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <stdint.h>
 
+#define ALIGNBYTES (sizeof(uintptr_t) - 1)
+#define ALIGN(p)(((uintptr_t)(p) + ALIGNBYTES & ~ALIGNBYTES))
 static unsigned atou(char **s)
 {
 	unsigned x;
@@ -104,5 +107,4 @@ end:
 	if(rv) errno = rv;
 	return rv;
 }
-
-#endif // ifdef BSD
+#endif //#if defined(BSD) || defined(__linux__) && !defined(__GLIBC__)

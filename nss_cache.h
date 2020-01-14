@@ -19,33 +19,32 @@
 #include <errno.h>
 #include <grp.h>
 #include <nss.h>
-#include <stdlib.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/param.h>
 #include <time.h>
 #include <unistd.h>
 
 #ifndef BSD
 #include <shadow.h>
-#endif // ifndef BSD
+#endif /* ifndef BSD */
 
 #ifndef NSS_CACHE_H
 #define NSS_CACHE_H
 
 #ifdef DEBUG
 #undef DEBUG
-#define DEBUG(fmt, args...)                                                    \
-  do {                                                                         \
-    fprintf(stderr, fmt, ##args);                                              \
+#define DEBUG(fmt, ...)                \
+  do {                                 \
+    fprintf(stderr, fmt, ##__VA_ARGS__); \
   } while (0)
 #else
-#define DEBUG(fmt, ...)                                                        \
-  do {                                                                         \
+#define DEBUG(fmt, ...) \
+  do {                  \
   } while (0)
 #endif /* DEBUG */
 
@@ -54,13 +53,13 @@ extern char *_nss_cache_setpwent_path(const char *path);
 extern char *_nss_cache_setgrent_path(const char *path);
 #ifndef BSD
 extern char *_nss_cache_setspent_path(const char *path);
-#endif // ifndef BSD
+#endif /* ifndef BSD */
 
 enum nss_cache_match {
   NSS_CACHE_EXACT = 0,
   NSS_CACHE_HIGH = 1,
   NSS_CACHE_LOW = 2,
-  NSS_CACHE_ERROR = 3,
+  NSS_CACHE_ERROR = 3
 };
 
 struct nss_cache_args {

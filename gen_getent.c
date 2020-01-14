@@ -30,7 +30,6 @@
 // file.
 
 static int getpwent_to_file(FILE *output) {
-
   struct passwd result;
   char *buffer;
   size_t buflen = 1024;
@@ -68,7 +67,6 @@ static int getpwent_to_file(FILE *output) {
 // file.
 
 static int getgrent_to_file(FILE *output) {
-
   struct group result;
   char *buffer;
   size_t buflen = 1024;
@@ -115,14 +113,13 @@ static int getgrent_to_file(FILE *output) {
 // file.
 
 static int getspent_to_file(FILE *output) {
-
   struct spwd result;
   char *buffer;
   size_t buflen = 1024;
   int errnop;
   enum nss_status ret;
 
-  _nss_cache_setpwent_path(SHADOW_FILE);
+  _nss_cache_setspent_path(SHADOW_FILE);
 
   buffer = malloc(buflen);
 
@@ -181,14 +178,13 @@ static int getspent_to_file(FILE *output) {
 
   return 0;
 }
-#endif // ifndef BSD
+#endif  // ifndef BSD
 
 // gen_getpwent_data()
 //
 // creates a copy of the passwd map as read by nss_cache.c
 
 static int gen_getpwent_data(void) {
-
   char filename[NSS_CACHE_PATH_LENGTH];
   FILE *output;
   int ret;
@@ -213,7 +209,6 @@ static int gen_getpwent_data(void) {
 // creates a copy of the group map as read by nss_cache.c
 
 static int gen_getgrent_data(void) {
-
   char filename[NSS_CACHE_PATH_LENGTH];
   FILE *output;
   int ret;
@@ -239,7 +234,6 @@ static int gen_getgrent_data(void) {
 // creates a copy of the shadow map as read by nss_cache.c
 
 static int gen_getspent_data(void) {
-
   char filename[NSS_CACHE_PATH_LENGTH];
   FILE *output;
   int ret;
@@ -258,7 +252,7 @@ static int gen_getspent_data(void) {
 
   return ret;
 }
-#endif // ifndef BSD
+#endif  // ifndef BSD
 
 // main()
 //
@@ -266,7 +260,6 @@ static int gen_getspent_data(void) {
 // which are further checked for correctness by 'make test'.
 
 int main(void) {
-
   int ret;
   int failed_tests = 0;
 

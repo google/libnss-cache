@@ -24,3 +24,5 @@ debian/patches
 a.out
 *.debian.tar.xz
 debian/debhelper-build-stamp
+.testdata/
+/tmpconfig.yml
