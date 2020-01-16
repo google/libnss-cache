@@ -138,7 +138,10 @@ enum nss_status _nss_cache_bsearch2(struct nss_cache_args *args, int *errnop) {
                         &_nss_cache_bsearch2_compare);
   if (entry != NULL) {
     const char *entry_text = entry;
-    sscanf(entry_text + strlen(entry_text) + 1, "%ld", &offset);
+    int r = sscanf(entry_text + strlen(entry_text) + 1, "%ld", &offset);
+    if (r != 1) {
+      DEBUG("sscanf expected 1 conversion, got %d\n", r);
+    }
   }
 
   if (munmap(mapped_data, sorted_file.st_size) == -1) {
