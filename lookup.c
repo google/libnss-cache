@@ -73,6 +73,7 @@ static int getpwnam_wrapper(char *name) {
     }
     if (ret == NSS_STATUS_UNAVAIL) {
       fprintf(stderr, "ERROR: failed to access passwd test data\n");
+      free(buffer);
       return 2;
     }
   } while (ret == NSS_STATUS_TRYAGAIN);
