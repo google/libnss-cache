@@ -53,6 +53,7 @@ static int getpwent_to_file(FILE *output) {
     }
     if (ret == NSS_STATUS_UNAVAIL) {
       fprintf(stderr, "ERROR: failed to access passwd test data\n");
+      free(buffer);
       return 1;
     }
   } while (ret == NSS_STATUS_SUCCESS || ret == NSS_STATUS_TRYAGAIN);
@@ -98,6 +99,7 @@ static int getgrent_to_file(FILE *output) {
     }
     if (ret == NSS_STATUS_UNAVAIL) {
       fprintf(stderr, "ERROR: failed to access group test data\n");
+      free(buffer);
       return 1;
     }
   } while (ret == NSS_STATUS_SUCCESS || ret == NSS_STATUS_TRYAGAIN);
@@ -170,6 +172,7 @@ static int getspent_to_file(FILE *output) {
     }
     if (ret == NSS_STATUS_UNAVAIL) {
       perror("ERROR: failed to access shadow test data");
+      free(buffer);      
       return 1;
     }
   } while (ret == NSS_STATUS_SUCCESS || ret == NSS_STATUS_TRYAGAIN);
