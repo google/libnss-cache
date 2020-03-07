@@ -1,7 +1,7 @@
 nsscache - Asynchronously synchronise local NSS databases with remote directory services
 ========================================================================================
 
-[![Build Status](https://travis-ci.org/google/libnss-cache.svg?branch=master)](https://travis-ci.org/google/libnss-cache)
+[![Build Status](https://api.cirrus-ci.com/github/google/libnss-cache.svg)](https://cirrus-ci.com/github/google/libnss-cache)
 
 `libnss-cache` is a NSS module for reading directory service information for Linux hosts from an indexed, local disk cache of that directory service.
 
