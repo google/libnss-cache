@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 
 for _i in `seq 1 2500` ; do

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 in=$1
 column=$2
