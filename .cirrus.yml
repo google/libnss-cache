@@ -1,7 +1,0 @@
-container:
-  image: gcc:latest
-
-test_task:
-  setup_script: apt update && apt install -y time
-  build_script: make all
-  test_script: make check
