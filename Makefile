@@ -13,7 +13,7 @@ TESTDATA=.testdata
 LIBNSSCACHE = nss_cache.o compat/getpwent_r.o compat/getgrent_r.o
 
 SOURCES = Makefile gen_getent.c lookup.c nss_cache.c nss_cache.h nss_test.h COPYING version libnss-cache.spec
-VERSION = $(shell cat version)
+VERSION = $(shell git describe --tags --always | sed -E 's@.*/([^-]*).*@\1@')
 
 all: $(LIBRARY)
 
