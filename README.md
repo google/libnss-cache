@@ -1,7 +1,7 @@
 libnss-cache - File-based NSS module for caching remote directory service information.
 ======================================================================================
 
-![ci](https://github.com/google/libnss-cache/workflows/CI/badge.svg)
+[![ci](https://github.com/google/libnss-cache/workflows/CI/badge.svg)](https://github.com/google/libnss-cache/actions?query=workflow%3ACI+branch%3Amaster)
 
 `libnss-cache` is a NSS module for reading directory service information for Linux hosts from an indexed, local disk cache of that directory service.
 
