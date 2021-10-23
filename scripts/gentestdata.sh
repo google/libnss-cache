@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export LC_ALL=C.UTF-8
+
 
 for _i in `seq 1 2500` ; do
     uid=$(tr -cd [:alpha:] < /dev/urandom | head -c8)
