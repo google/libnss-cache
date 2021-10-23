@@ -346,11 +346,12 @@ enum nss_status _nss_cache_getpwuid_r(uid_t uid, struct passwd *result,
   enum nss_status ret;
 
   strncpy(filename, p_filename, NSS_CACHE_PATH_LENGTH - 1);
-  if (strlen(filename) > NSS_CACHE_PATH_LENGTH - 7) {
+  int n = strlen(filename);
+  if (n > NSS_CACHE_PATH_LENGTH - 7) {
     DEBUG("filename too long\n");
     return NSS_STATUS_UNAVAIL;
   }
-  strncat(filename, ".ixuid", 6);
+  strncat(filename, ".ixuid", NSS_CACHE_PATH_LENGTH - n - 1);
 
   args.sorted_filename = filename;
   args.system_filename = p_filename;
@@ -408,12 +409,13 @@ enum nss_status _nss_cache_getpwnam_r(const char *name, struct passwd *result,
   strncpy(pw_name, name, strlen(name) + 1);
 
   strncpy(filename, p_filename, NSS_CACHE_PATH_LENGTH - 1);
-  if (strlen(filename) > NSS_CACHE_PATH_LENGTH - 8) {
+  int n = strlen(filename);
+  if (n > NSS_CACHE_PATH_LENGTH - 8) {
     DEBUG("filename too long\n");
     free(pw_name);
     return NSS_STATUS_UNAVAIL;
   }
-  strncat(filename, ".ixname", 7);
+  strncat(filename, ".ixname", NSS_CACHE_PATH_LENGTH - n - 1);
 
   args.sorted_filename = filename;
   args.system_filename = p_filename;
@@ -629,11 +631,12 @@ enum nss_status _nss_cache_getgrgid_r(gid_t gid, struct group *result,
   }
 
   strncpy(filename, g_filename, NSS_CACHE_PATH_LENGTH - 1);
-  if (strlen(filename) > NSS_CACHE_PATH_LENGTH - 7) {
+  int n = strlen(filename);
+  if (n > NSS_CACHE_PATH_LENGTH - 7) {
     DEBUG("filename too long\n");
     return NSS_STATUS_UNAVAIL;
   }
-  strncat(filename, ".ixgid", 6);
+  strncat(filename, ".ixgid", NSS_CACHE_PATH_LENGTH - n - 1);
 
   args.sorted_filename = filename;
   args.system_filename = g_filename;
@@ -691,12 +694,13 @@ enum nss_status _nss_cache_getgrnam_r(const char *name, struct group *result,
   strncpy(gr_name, name, strlen(name) + 1);
 
   strncpy(filename, g_filename, NSS_CACHE_PATH_LENGTH - 1);
-  if (strlen(filename) > NSS_CACHE_PATH_LENGTH - 8) {
+  int n = strlen(filename);
+  if (n > NSS_CACHE_PATH_LENGTH - 8) {
     DEBUG("filename too long\n");
     free(gr_name);
     return NSS_STATUS_UNAVAIL;
   }
-  strncat(filename, ".ixname", 7);
+  strncat(filename, ".ixname", NSS_CACHE_PATH_LENGTH - n - 1);
 
   args.sorted_filename = filename;
   args.system_filename = g_filename;
@@ -883,12 +887,13 @@ enum nss_status _nss_cache_getspnam_r(const char *name, struct spwd *result,
   strncpy(sp_namp, name, strlen(name) + 1);
 
   strncpy(filename, s_filename, NSS_CACHE_PATH_LENGTH - 1);
-  if (strlen(filename) > NSS_CACHE_PATH_LENGTH - 8) {
+  int n = strlen(filename);
+  if (n > NSS_CACHE_PATH_LENGTH - 8) {
     DEBUG("filename too long\n");
     free(sp_namp);
     return NSS_STATUS_UNAVAIL;
   }
-  strncat(filename, ".ixname", 7);
+  strncat(filename, ".ixname", NSS_CACHE_PATH_LENGTH - n - 1);
 
   args.sorted_filename = filename;
   args.system_filename = s_filename;

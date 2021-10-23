@@ -193,7 +193,8 @@ static int gen_getpwent_data(void) {
   int ret;
 
   strncpy(filename, PASSWD_FILE, NSS_CACHE_PATH_LENGTH - 4);
-  strncat(filename, ".out", 4);
+  int n = strlen(filename);
+  strncat(filename, ".out", NSS_CACHE_PATH_LENGTH - n - 1);
   output = fopen(filename, "w");
 
   if (output == NULL) {
@@ -217,7 +218,8 @@ static int gen_getgrent_data(void) {
   int ret;
 
   strncpy(filename, GROUP_FILE, NSS_CACHE_PATH_LENGTH - 4);
-  strncat(filename, ".out", 4);
+  int n = strlen(filename);
+  strncat(filename, ".out", NSS_CACHE_PATH_LENGTH - n - 1);
   output = fopen(filename, "w");
 
   if (output == NULL) {
@@ -242,7 +244,8 @@ static int gen_getspent_data(void) {
   int ret;
 
   strncpy(filename, SHADOW_FILE, NSS_CACHE_PATH_LENGTH - 4);
-  strncat(filename, ".out", 4);
+  int n = strlen(filename);
+  strncat(filename, ".out", NSS_CACHE_PATH_LENGTH - n - 1);
   output = fopen(filename, "w");
 
   if (output == NULL) {
