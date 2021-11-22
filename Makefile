@@ -22,7 +22,7 @@ check: test_getent time_lookups
 lookup: lookup.o $(LIBNSSCACHE)
 	$(CC) $(CFLAGS) -o $@ $^
 
-time_lookups: testdirs lookup_data lookup
+time_lookups: $(TESTDATA) lookup_data lookup
 	@echo Linear username lookups
 	rm -f $(TESTDATA)/passwd.cache.ixname
 	time -f %E ./lookup -c getpwnam -f $(TESTDATA)/rand_pwnames
@@ -80,13 +80,13 @@ lookup_data: getent_data
 	cut -d : -f 1 $(TESTDATA)/shadow.cache |\
 	  sort -R | head -500 > $(TESTDATA)/rand_spnames
 
-getent_data: testdirs
+getent_data: $(TESTDATA)
 	./scripts/gentestdata.sh $(TESTDATA)
 
 last_pw_errno_test: test/last_pw_errno_test.c
 	$(CC) $(CFLAGS) -o $@ $^
 
-testdirs:
+$(TESTDATA):
 	mkdir -p $(TESTDATA)
 
 $(LIBRARY): $(LIBNSSCACHE)
