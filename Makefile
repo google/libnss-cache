@@ -1,9 +1,7 @@
 CC ?= gcc
 CFLAGS ?= -Wall -Wstrict-prototypes
 CFLAGS += -fPIC
-LDFLAGS += -shared
-LIBRARY=libnss_cache.so.2.0
-BASE_LIBRARY=libnss_cache.so.2
+LIBRARY=libnss_cache.so
 PREFIX=$(DESTDIR)/usr
 LIBDIR=$(PREFIX)/lib
 SONAME=libnss_cache.so.2
@@ -17,12 +15,15 @@ VERSION = $(shell git describe --tags --always | sed -E 's@.*/([^-]*).*@\1@')
 
 all: $(LIBRARY)
 
+.PHONY: check
+check: CFLAGS += -O0 -g --coverage
+check: LDFLAGS += --coverage
 check: test_getent time_lookups
 
 lookup: lookup.o $(LIBNSSCACHE)
-	$(CC) $(CFLAGS) -o $@ $^
 
-time_lookups: testdirs lookup_data lookup
+.PHONY: time_lookups
+time_lookups: $(TESTDATA) lookup_data lookup
 	@echo Linear username lookups
 	rm -f $(TESTDATA)/passwd.cache.ixname
 	time -f %E ./lookup -c getpwnam -f $(TESTDATA)/rand_pwnames
@@ -59,15 +60,17 @@ time_lookups: testdirs lookup_data lookup
 	time -f %E ./lookup -c getspnam -f $(TESTDATA)/rand_spnames
 
 gen_getent: gen_getent.o $(LIBNSSCACHE)
-	$(CC) -o $@ $^
 
 
+.PHONY: test_getent
 test_getent: getent_data gen_getent nss_cache.c
 	./gen_getent
 	diff $(TESTDATA)/passwd.cache $(TESTDATA)/passwd.cache.out
 	diff $(TESTDATA)/group.cache $(TESTDATA)/group.cache.out
 	diff $(TESTDATA)/shadow.cache $(TESTDATA)/shadow.cache.out
+	gcov --all-blocks --branch-probabilities --branch-counts --function-summaries --unconditional-branches ./gen_getent
 
+.PHONY: lookup_data
 lookup_data: getent_data
 	cut -d : -f 1 $(TESTDATA)/passwd.cache |\
 	  sort -R | head -500 > $(TESTDATA)/rand_pwnames
@@ -80,30 +83,43 @@ lookup_data: getent_data
 	cut -d : -f 1 $(TESTDATA)/shadow.cache |\
 	  sort -R | head -500 > $(TESTDATA)/rand_spnames
 
-getent_data: testdirs
+.PHONY: getent_data
+getent_data: $(TESTDATA)
 	./scripts/gentestdata.sh $(TESTDATA)
 
 last_pw_errno_test: test/last_pw_errno_test.c
-	$(CC) $(CFLAGS) -o $@ $^
 
-testdirs:
+$(TESTDATA):
 	mkdir -p $(TESTDATA)
 
+$(LIBRARY): LDFLAGS += -shared $(LD_SONAME)
 $(LIBRARY): $(LIBNSSCACHE)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(LD_SONAME) -o $(LIBRARY) $+
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $(LIBRARY) $+
 
-clean:
-	rm -f $(LIBRARY) *.o compat/*.o lookup ./gen_getent last_pw_errno_test
-	rm -rf $(TESTDATA)
+$(SONAME): $(LIBRARY)
+	ln -sf $(LIBRARY) $(SONAME)
+	ln -sf $(LIBRARY) $(SONAME).0
 
-install: all
+.PHONY: install
+install: $(SONAME)
 	install -d $(LIBDIR)
 	install $(LIBRARY) $(LIBDIR)
-	ln -sf $(LIBRARY) $(LIBDIR)/$(BASE_LIBRARY)
+	install $(SONAME) $(LIBDIR)
+	install $(SONAME).0 $(LIBDIR)
 
-distclean: clean
+.PHONY: clean
+clean:
+	rm -f $(LIBRARY)* *.o compat/*.o *.gcda *.gcno compat/*.gcda compat/*.gcno lookup gen_getent last_pw_errno_test 
+
+.PHONY: veryclean
+veryclean: clean
+	rm -rf $(TESTDATA)
+
+.PHONY: distclean
+distclean: veryclean
 	rm -f *~ \#*
 
+.PHONY: dist
 dist:
 	rm -rf libnss-cache-$(VERSION) libnss-cache-$(VERSION).tar libnss-cache-$(VERSION).tar.gz
 	mkdir libnss-cache-$(VERSION)
@@ -111,5 +127,3 @@ dist:
 	tar cf libnss-cache-$(VERSION).tar libnss-cache-$(VERSION)
 	gzip -9 libnss-cache-$(VERSION).tar
 	rm -rf libnss-cache-$(VERSION)
-
-.PHONY: all dist clean install distclean
