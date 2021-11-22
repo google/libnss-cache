@@ -17,10 +17,14 @@ VERSION = $(shell git describe --tags --always | sed -E 's@.*/([^-]*).*@\1@')
 
 all: $(LIBRARY)
 
+.PHONY: check
+check: CFLAGS += -O0 -fprofile-arcs -ftest-coverage -g
+check: LDFLAGS += -lgcov -fprofile-arcs
+
 check: test_getent time_lookups
 
 lookup: lookup.o $(LIBNSSCACHE)
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
 time_lookups: $(TESTDATA) lookup_data lookup
 	@echo Linear username lookups
@@ -59,7 +63,7 @@ time_lookups: $(TESTDATA) lookup_data lookup
 	time -f %E ./lookup -c getspnam -f $(TESTDATA)/rand_spnames
 
 gen_getent: gen_getent.o $(LIBNSSCACHE)
-	$(CC) -o $@ $^
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
 
 test_getent: getent_data gen_getent nss_cache.c
@@ -67,6 +71,7 @@ test_getent: getent_data gen_getent nss_cache.c
 	diff $(TESTDATA)/passwd.cache $(TESTDATA)/passwd.cache.out
 	diff $(TESTDATA)/group.cache $(TESTDATA)/group.cache.out
 	diff $(TESTDATA)/shadow.cache $(TESTDATA)/shadow.cache.out
+	gcov --all-blocks --branch-probabilities --branch-counts --function-summaries --unconditional-branches ./gen_getent
 
 lookup_data: getent_data
 	cut -d : -f 1 $(TESTDATA)/passwd.cache |\
