@@ -39,7 +39,7 @@
 #include <stdint.h>
 
 #define ALIGNBYTES (sizeof(uintptr_t) - 1)
-#define ALIGN(p)(((uintptr_t)(p) + ALIGNBYTES & ~ALIGNBYTES))
+#define ALIGN(p)((((uintptr_t)(p) + ALIGNBYTES) & ~ALIGNBYTES))
 static unsigned atou(char **s)
 {
 	unsigned x;
