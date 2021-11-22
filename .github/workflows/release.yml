@@ -6,6 +6,7 @@ on:
   push:
     tags:
       - v*
+      - version/*
 
 permissions:
   # writes to the Releases API
