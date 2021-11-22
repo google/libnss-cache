@@ -27,3 +27,6 @@ debian/debhelper-build-stamp
 .testdata/
 /tmpconfig.yml
 /.ghi.yml
+/libnss_cache.so
+/gen_getent.c.gcov
+/build/
