@@ -19,10 +19,9 @@ jobs:
       # which says "can only be enabled by users with permissino to merge"; the
       # REST documentation says you need contents: write to perform a merge.
       # https://github.community/t/what-permission-does-a-github-action-need-to-call-graphql-enablepullrequestautomerge/197708 says this is it but also https://github.com/hmarr/auto-approve-action/issues/183 says we need write on PRs
-      #contents: write
+      contents: write
+      # auto-approve-action requires write on pull-requests
       pull-requests: write
-      # auto-approve-action requires write on actions
-      actions: write
     steps:
 
     # Enable auto-merge *before* issuing an approval.
