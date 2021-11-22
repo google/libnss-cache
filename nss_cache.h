@@ -38,8 +38,8 @@
 
 #ifdef DEBUG
 #undef DEBUG
-#define DEBUG(fmt, ...)                \
-  do {                                 \
+#define DEBUG(fmt, ...)                  \
+  do {                                   \
     fprintf(stderr, fmt, ##__VA_ARGS__); \
   } while (0)
 #else

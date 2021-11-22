@@ -30,57 +30,63 @@
 // Library.
 #if defined(BSD) || (defined(__linux__) && !defined(__GLIBC__))
 
+#include <errno.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
 #include <string.h>
 
-static unsigned atou(char **s)
-{
-	unsigned x;
-	for (x=0; **s-'0'<10U; ++*s) x=10*x+(**s-'0');
-	return x;
+static unsigned atou(char **s) {
+  unsigned x;
+  for (x = 0; **s - '0' < 10U; ++*s) x = 10 * x + (**s - '0');
+  return x;
 }
 
-int fgetpwent_r(FILE *f, struct passwd *pw, char *line, size_t size, struct passwd **res)
-{
-	char *s;
-	int rv = 0;
-	for (;;) {
-		line[size-1] = '\xff';
-		if ( (fgets(line, size, f) == NULL) || ferror(f) || line[size-1] != '\xff' ) {
-			rv = (line[size-1] != '\xff') ? ERANGE : ENOENT;
-			line = 0;
-			pw = 0;
-			break;
-		}
-		line[strcspn(line, "\n")] = 0;
+int fgetpwent_r(FILE *f, struct passwd *pw, char *line, size_t size,
+                struct passwd **res) {
+  char *s;
+  int rv = 0;
+  for (;;) {
+    line[size - 1] = '\xff';
+    if ((fgets(line, size, f) == NULL) || ferror(f) ||
+        line[size - 1] != '\xff') {
+      rv = (line[size - 1] != '\xff') ? ERANGE : ENOENT;
+      line = 0;
+      pw = 0;
+      break;
+    }
+    line[strcspn(line, "\n")] = 0;
 
-		s = line;
-		pw->pw_name = s++;
-		if (!(s = strchr(s, ':'))) continue;
+    s = line;
+    pw->pw_name = s++;
+    if (!(s = strchr(s, ':'))) continue;
 
-		*s++ = 0; pw->pw_passwd = s;
-		if (!(s = strchr(s, ':'))) continue;
+    *s++ = 0;
+    pw->pw_passwd = s;
+    if (!(s = strchr(s, ':'))) continue;
 
-		*s++ = 0; pw->pw_uid = atou(&s);
-		if (*s != ':') continue;
+    *s++ = 0;
+    pw->pw_uid = atou(&s);
+    if (*s != ':') continue;
 
-		*s++ = 0; pw->pw_gid = atou(&s);
-		if (*s != ':') continue;
+    *s++ = 0;
+    pw->pw_gid = atou(&s);
+    if (*s != ':') continue;
 
-		*s++ = 0; pw->pw_gecos = s;
-		if (!(s = strchr(s, ':'))) continue;
+    *s++ = 0;
+    pw->pw_gecos = s;
+    if (!(s = strchr(s, ':'))) continue;
 
-		*s++ = 0; pw->pw_dir = s;
-		if (!(s = strchr(s, ':'))) continue;
+    *s++ = 0;
+    pw->pw_dir = s;
+    if (!(s = strchr(s, ':'))) continue;
 
-		*s++ = 0; pw->pw_shell = s;
-		break;
-	}
-	*res = pw;
-	if (rv) errno = rv;
-	return rv;
+    *s++ = 0;
+    pw->pw_shell = s;
+    break;
+  }
+  *res = pw;
+  if (rv) errno = rv;
+  return rv;
 }
-#endif //#if defined(BSD) || defined(__linux__) && !defined(__GLIBC__)
+#endif  //#if defined(BSD) || defined(__linux__) && !defined(__GLIBC__)
