@@ -172,7 +172,7 @@ static int getspent_to_file(FILE *output) {
     }
     if (ret == NSS_STATUS_UNAVAIL) {
       perror("ERROR: failed to access shadow test data");
-      free(buffer);      
+      free(buffer);
       return 1;
     }
   } while (ret == NSS_STATUS_SUCCESS || ret == NSS_STATUS_TRYAGAIN);

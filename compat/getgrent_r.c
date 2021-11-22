@@ -30,81 +30,84 @@
 // Library.
 #if defined(BSD) || (defined(__linux__) && !defined(__GLIBC__))
 
+#include <errno.h>
 #include <grp.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
 #include <string.h>
-#include <stdint.h>
 
 #define ALIGNBYTES (sizeof(uintptr_t) - 1)
-#define ALIGN(p)((((uintptr_t)(p) + ALIGNBYTES) & ~ALIGNBYTES))
-static unsigned atou(char **s)
-{
-	unsigned x;
-	for (x=0; **s-'0'<10U; ++*s) x=10*x+(**s-'0');
-	return x;
+#define ALIGN(p) ((((uintptr_t)(p) + ALIGNBYTES) & ~ALIGNBYTES))
+static unsigned atou(char **s) {
+  unsigned x;
+  for (x = 0; **s - '0' < 10U; ++*s) x = 10 * x + (**s - '0');
+  return x;
 }
 
-int fgetgrent_r(FILE *f, struct group *gr, char *line, size_t size, struct group **res)
-{
-	char *s, *mems;
-	size_t i, nmem, need;
-	int rv = 0;
-	int ep;
-	ptrdiff_t remain;
-	for (;;) {
-		line[size-1] = '\xff';
-		if ( (fgets(line, size, f) == NULL) || ferror(f) || (line[size-1] != '\xff') ) {
-			rv = (line[size-1] != '\xff') ? ERANGE : ENOENT;
-			line = 0;
-			gr = 0;
-			goto end;
-		}
-		ep = strcspn(line, "\n");
-		line[ep] = 0;
+int fgetgrent_r(FILE *f, struct group *gr, char *line, size_t size,
+                struct group **res) {
+  char *s, *mems;
+  size_t i, nmem, need;
+  int rv = 0;
+  int ep;
+  ptrdiff_t remain;
+  for (;;) {
+    line[size - 1] = '\xff';
+    if ((fgets(line, size, f) == NULL) || ferror(f) ||
+        (line[size - 1] != '\xff')) {
+      rv = (line[size - 1] != '\xff') ? ERANGE : ENOENT;
+      line = 0;
+      gr = 0;
+      goto end;
+    }
+    ep = strcspn(line, "\n");
+    line[ep] = 0;
 
-		s = line;
-		gr->gr_name = s++;
-		if (!(s = strchr(s, ':'))) continue;
+    s = line;
+    gr->gr_name = s++;
+    if (!(s = strchr(s, ':'))) continue;
 
-		*s++ = 0; gr->gr_passwd = s;
-		if (!(s = strchr(s, ':'))) continue;
+    *s++ = 0;
+    gr->gr_passwd = s;
+    if (!(s = strchr(s, ':'))) continue;
 
-		*s++ = 0; gr->gr_gid = atou(&s);
-		if (*s != ':') continue;
+    *s++ = 0;
+    gr->gr_gid = atou(&s);
+    if (*s != ':') continue;
 
-		*s++ = 0; mems = s;
-		break;
-	}
+    *s++ = 0;
+    mems = s;
+    break;
+  }
 
-	for (nmem=!!*s; *s; s++)
-		if (*s==',') ++nmem;
+  for (nmem = !!*s; *s; s++)
+    if (*s == ',') ++nmem;
 
-	++ep;
-	remain = (void *) &line[size] - (void *) &line[ep];
-	need = (sizeof(char *) * (nmem+1)) + ALIGNBYTES;
-	if (need > remain) {
-		rv = ERANGE;
-		line = 0;
-		gr = 0;
-		goto end;
-	}
-	memset(&line[ep], 0, need);
-	gr->gr_mem = (char **) ALIGN(&line[ep]);
+  ++ep;
+  remain = (void *)&line[size] - (void *)&line[ep];
+  need = (sizeof(char *) * (nmem + 1)) + ALIGNBYTES;
+  if (need > remain) {
+    rv = ERANGE;
+    line = 0;
+    gr = 0;
+    goto end;
+  }
+  memset(&line[ep], 0, need);
+  gr->gr_mem = (char **)ALIGN(&line[ep]);
 
-	if (*mems) {
-		gr->gr_mem[0] = mems;
-		for (s=mems, i=0; *s; s++)
-			if (*s==',') *s++ = 0, gr->gr_mem[++i] = s;
-		gr->gr_mem[++i] = 0;
-	} else {
-		gr->gr_mem[0] = 0;
-	}
+  if (*mems) {
+    gr->gr_mem[0] = mems;
+    for (s = mems, i = 0; *s; s++)
+      if (*s == ',') *s++ = 0, gr->gr_mem[++i] = s;
+    gr->gr_mem[++i] = 0;
+  } else {
+    gr->gr_mem[0] = 0;
+  }
 end:
-	*res = gr;
-	if(rv) errno = rv;
-	return rv;
+  *res = gr;
+  if (rv) errno = rv;
+  return rv;
 }
-#endif //#if defined(BSD) || defined(__linux__) && !defined(__GLIBC__)
+#endif  //#if defined(BSD) || defined(__linux__) && !defined(__GLIBC__)
