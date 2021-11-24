@@ -4,6 +4,7 @@ on:
     # Filter on branch so we don't double-run this workflow on a PR's push.
     tags:
       - v*
+      - version*
     branches:
       - main
   pull_request:
@@ -29,7 +30,7 @@ jobs:
       - uses: codecov/codecov-action@v2.1.0
         if: always()
         with:
-          file: ./gen_getent.c.gcov
+          directory: .
 
   fmt-lint:
     runs-on: ubuntu-latest
