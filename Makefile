@@ -58,6 +58,7 @@ time_lookups: $(TESTDATA) lookup_data lookup
 	@echo Binary shadow lookups
 	./scripts/index.sh $(TESTDATA)/shadow.cache 1 $(TESTDATA)/shadow.cache.ixname
 	time -f %E ./lookup -c getspnam -f $(TESTDATA)/rand_spnames
+	gcov --all-blocks --branch-probabilities --branch-counts --function-summaries --unconditional-branches ./lookup
 
 gen_getent: gen_getent.o $(LIBNSSCACHE)
 
