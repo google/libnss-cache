@@ -36,6 +36,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: jidicula/clang-format-action@v4.6.1
+      - uses: jidicula/clang-format-action@v4.6.2
         with:
           fallback-style: "Google"
