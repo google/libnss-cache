@@ -23,6 +23,7 @@
 #include "nss_cache.h"
 
 #include <sys/mman.h>
+#include <stdio.h>
 
 /* Locking implementation: use pthreads. */
 #include <pthread.h>
@@ -36,13 +37,15 @@ static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
     pthread_mutex_unlock(&mutex); \
   } while (0)
 
-static FILE *p_file = NULL;
-static FILE *g_file = NULL;
-static char p_filename[NSS_CACHE_PATH_LENGTH] = "/etc/passwd.cache";
-static char g_filename[NSS_CACHE_PATH_LENGTH] = "/etc/group.cache";
+static FILE *pw_file = NULL;
+static FILE *gr_file = NULL;
+static char pw_filename[NSS_CACHE_PATH_LENGTH] = "/etc/passwd.cache";
+static char gr_filename[NSS_CACHE_PATH_LENGTH] = "/etc/group.cache";
 #ifndef BSD
-static FILE *s_file = NULL;
-static char s_filename[NSS_CACHE_PATH_LENGTH] = "/etc/shadow.cache";
+static FILE *sp_file = NULL;
+static FILE *sg_file = NULL;
+static char sp_filename[NSS_CACHE_PATH_LENGTH] = "/etc/shadow.cache";
+static char sg_filename[NSS_CACHE_PATH_LENGTH] = "/etc/gshadow.cache";
 #else
 extern int fgetpwent_r(FILE *, struct passwd *, char *, size_t,
                        struct passwd **);
@@ -192,8 +195,8 @@ enum nss_status _nss_cache_bsearch2(struct nss_cache_args *args, int *errnop) {
 // Helper function for testing
 
 extern char *_nss_cache_setpwent_path(const char *path) {
-  DEBUG("%s %s\n", "Setting p_filename to", path);
-  return strncpy(p_filename, path, NSS_CACHE_PATH_LENGTH - 1);
+  DEBUG("%s %s\n", "Setting pw_filename to", path);
+  return strncpy(pw_filename, path, NSS_CACHE_PATH_LENGTH - 1);
 }
 
 // _nss_cache_pwuid_wrap()
@@ -250,10 +253,10 @@ static enum nss_cache_match _nss_cache_pwnam_wrap(FILE *file,
 // Internal setup routine
 
 static enum nss_status _nss_cache_setpwent_locked(void) {
-  DEBUG("%s %s\n", "Opening", p_filename);
-  p_file = fopen(p_filename, "r");
+  DEBUG("%s %s\n", "Opening", pw_filename);
+  pw_file = fopen(pw_filename, "r");
 
-  if (p_file) {
+  if (pw_file) {
     return NSS_STATUS_SUCCESS;
   } else {
     return NSS_STATUS_UNAVAIL;
@@ -277,9 +280,9 @@ enum nss_status _nss_cache_setpwent(int stayopen) {
 
 static enum nss_status _nss_cache_endpwent_locked(void) {
   DEBUG("Closing passwd.cache\n");
-  if (p_file) {
-    fclose(p_file);
-    p_file = NULL;
+  if (pw_file) {
+    fclose(pw_file);
+    pw_file = NULL;
   }
   return NSS_STATUS_SUCCESS;
 }
@@ -303,13 +306,13 @@ static enum nss_status _nss_cache_getpwent_r_locked(struct passwd *result,
                                                     int *errnop) {
   enum nss_status ret = NSS_STATUS_SUCCESS;
 
-  if (p_file == NULL) {
-    DEBUG("p_file == NULL, going to setpwent\n");
+  if (pw_file == NULL) {
+    DEBUG("pw_file == NULL, going to setpwent\n");
     ret = _nss_cache_setpwent_locked();
   }
 
   if (ret == NSS_STATUS_SUCCESS) {
-    if (fgetpwent_r(p_file, result, buffer, buflen, &result) == 0) {
+    if (fgetpwent_r(pw_file, result, buffer, buflen, &result) == 0) {
       DEBUG("Returning user %d:%s\n", result->pw_uid, result->pw_name);
     } else {
       if (errno == ENOENT) {
@@ -345,7 +348,7 @@ enum nss_status _nss_cache_getpwuid_r(uid_t uid, struct passwd *result,
   struct nss_cache_args args;
   enum nss_status ret;
 
-  strncpy(filename, p_filename, NSS_CACHE_PATH_LENGTH - 1);
+  strncpy(filename, pw_filename, NSS_CACHE_PATH_LENGTH - 1);
   int n = strlen(filename);
   if (n > NSS_CACHE_PATH_LENGTH - 7) {
     DEBUG("filename too long\n");
@@ -354,7 +357,7 @@ enum nss_status _nss_cache_getpwuid_r(uid_t uid, struct passwd *result,
   strncat(filename, ".ixuid", NSS_CACHE_PATH_LENGTH - n - 1);
 
   args.sorted_filename = filename;
-  args.system_filename = p_filename;
+  args.system_filename = pw_filename;
   args.lookup_function = _nss_cache_pwuid_wrap;
   args.lookup_value = &uid;
   args.lookup_result = result;
@@ -408,7 +411,7 @@ enum nss_status _nss_cache_getpwnam_r(const char *name, struct passwd *result,
   }
   strncpy(pw_name, name, strlen(name) + 1);
 
-  strncpy(filename, p_filename, NSS_CACHE_PATH_LENGTH - 1);
+  strncpy(filename, pw_filename, NSS_CACHE_PATH_LENGTH - 1);
   int n = strlen(filename);
   if (n > NSS_CACHE_PATH_LENGTH - 8) {
     DEBUG("filename too long\n");
@@ -418,7 +421,7 @@ enum nss_status _nss_cache_getpwnam_r(const char *name, struct passwd *result,
   strncat(filename, ".ixname", NSS_CACHE_PATH_LENGTH - n - 1);
 
   args.sorted_filename = filename;
-  args.system_filename = p_filename;
+  args.system_filename = pw_filename;
   args.lookup_function = _nss_cache_pwnam_wrap;
   args.lookup_value = pw_name;
   args.lookup_result = result;
@@ -457,18 +460,18 @@ enum nss_status _nss_cache_getpwnam_r(const char *name, struct passwd *result,
 // Helper function for testing
 
 extern char *_nss_cache_setgrent_path(const char *path) {
-  DEBUG("%s %s\n", "Setting g_filename to", path);
-  return strncpy(g_filename, path, NSS_CACHE_PATH_LENGTH - 1);
+  DEBUG("%s %s\n", "Setting gr_filename to", path);
+  return strncpy(gr_filename, path, NSS_CACHE_PATH_LENGTH - 1);
 }
 
 // _nss_cache_setgrent_locked()
 // Internal setup routine
 
 static enum nss_status _nss_cache_setgrent_locked(void) {
-  DEBUG("%s %s\n", "Opening", g_filename);
-  g_file = fopen(g_filename, "r");
+  DEBUG("%s %s\n", "Opening", gr_filename);
+  gr_file = fopen(gr_filename, "r");
 
-  if (g_file) {
+  if (gr_file) {
     return NSS_STATUS_SUCCESS;
   } else {
     return NSS_STATUS_UNAVAIL;
@@ -542,9 +545,9 @@ enum nss_status _nss_cache_setgrent(int stayopen) {
 
 static enum nss_status _nss_cache_endgrent_locked(void) {
   DEBUG("Closing group.cache\n");
-  if (g_file) {
-    fclose(g_file);
-    g_file = NULL;
+  if (gr_file) {
+    fclose(gr_file);
+    gr_file = NULL;
   }
   return NSS_STATUS_SUCCESS;
 }
@@ -568,16 +571,16 @@ static enum nss_status _nss_cache_getgrent_r_locked(struct group *result,
                                                     int *errnop) {
   enum nss_status ret = NSS_STATUS_SUCCESS;
 
-  if (g_file == NULL) {
-    DEBUG("g_file == NULL, going to setgrent\n");
+  if (gr_file == NULL) {
+    DEBUG("gr_file == NULL, going to setgrent\n");
     ret = _nss_cache_setgrent_locked();
   }
 
   if (ret == NSS_STATUS_SUCCESS) {
     fpos_t position;
 
-    fgetpos(g_file, &position);
-    if (fgetgrent_r(g_file, result, buffer, buflen, &result) == 0) {
+    fgetpos(gr_file, &position);
+    if (fgetgrent_r(gr_file, result, buffer, buflen, &result) == 0) {
       DEBUG("Returning group %s (%d)\n", result->gr_name, result->gr_gid);
     } else {
       /* Rewind back to where we were just before, otherwise the data read
@@ -590,7 +593,7 @@ static enum nss_status _nss_cache_getgrent_r_locked(struct group *result,
       if (errno == ENOENT) {
         errno = 0;
       } else {
-        fsetpos(g_file, &position);
+        fsetpos(gr_file, &position);
       }
       *errnop = errno;
       ret = _nss_cache_ent_bad_return_code(*errnop);
@@ -630,7 +633,7 @@ enum nss_status _nss_cache_getgrgid_r(gid_t gid, struct group *result,
     return NSS_STATUS_TRYAGAIN;
   }
 
-  strncpy(filename, g_filename, NSS_CACHE_PATH_LENGTH - 1);
+  strncpy(filename, gr_filename, NSS_CACHE_PATH_LENGTH - 1);
   int n = strlen(filename);
   if (n > NSS_CACHE_PATH_LENGTH - 7) {
     DEBUG("filename too long\n");
@@ -639,7 +642,7 @@ enum nss_status _nss_cache_getgrgid_r(gid_t gid, struct group *result,
   strncat(filename, ".ixgid", NSS_CACHE_PATH_LENGTH - n - 1);
 
   args.sorted_filename = filename;
-  args.system_filename = g_filename;
+  args.system_filename = gr_filename;
   args.lookup_function = _nss_cache_grgid_wrap;
   args.lookup_value = &gid;
   args.lookup_result = result;
@@ -693,7 +696,7 @@ enum nss_status _nss_cache_getgrnam_r(const char *name, struct group *result,
   }
   strncpy(gr_name, name, strlen(name) + 1);
 
-  strncpy(filename, g_filename, NSS_CACHE_PATH_LENGTH - 1);
+  strncpy(filename, gr_filename, NSS_CACHE_PATH_LENGTH - 1);
   int n = strlen(filename);
   if (n > NSS_CACHE_PATH_LENGTH - 8) {
     DEBUG("filename too long\n");
@@ -703,7 +706,7 @@ enum nss_status _nss_cache_getgrnam_r(const char *name, struct group *result,
   strncat(filename, ".ixname", NSS_CACHE_PATH_LENGTH - n - 1);
 
   args.sorted_filename = filename;
-  args.system_filename = g_filename;
+  args.system_filename = gr_filename;
   args.lookup_function = _nss_cache_grnam_wrap;
   args.lookup_value = gr_name;
   args.lookup_result = result;
@@ -746,18 +749,18 @@ enum nss_status _nss_cache_getgrnam_r(const char *name, struct group *result,
 // Helper function for testing
 
 extern char *_nss_cache_setspent_path(const char *path) {
-  DEBUG("%s %s\n", "Setting s_filename to", path);
-  return strncpy(s_filename, path, NSS_CACHE_PATH_LENGTH - 1);
+  DEBUG("%s %s\n", "Setting sp_filename to", path);
+  return strncpy(sp_filename, path, NSS_CACHE_PATH_LENGTH - 1);
 }
 
 // _nss_cache_setspent_locked()
 // Internal setup routine
 
 static enum nss_status _nss_cache_setspent_locked(void) {
-  DEBUG("%s %s\n", "Opening", s_filename);
-  s_file = fopen(s_filename, "r");
+  DEBUG("%s %s\n", "Opening", sp_filename);
+  sp_file = fopen(sp_filename, "r");
 
-  if (s_file) {
+  if (sp_file) {
     return NSS_STATUS_SUCCESS;
   } else {
     return NSS_STATUS_UNAVAIL;
@@ -807,9 +810,9 @@ enum nss_status _nss_cache_setspent(int stayopen) {
 
 static enum nss_status _nss_cache_endspent_locked(void) {
   DEBUG("Closing shadow.cache\n");
-  if (s_file) {
-    fclose(s_file);
-    s_file = NULL;
+  if (sp_file) {
+    fclose(sp_file);
+    sp_file = NULL;
   }
   return NSS_STATUS_SUCCESS;
 }
@@ -833,13 +836,13 @@ static enum nss_status _nss_cache_getspent_r_locked(struct spwd *result,
                                                     int *errnop) {
   enum nss_status ret = NSS_STATUS_SUCCESS;
 
-  if (s_file == NULL) {
-    DEBUG("s_file == NULL, going to setspent\n");
+  if (sp_file == NULL) {
+    DEBUG("sp_file == NULL, going to setspent\n");
     ret = _nss_cache_setspent_locked();
   }
 
   if (ret == NSS_STATUS_SUCCESS) {
-    if (fgetspent_r(s_file, result, buffer, buflen, &result) == 0) {
+    if (fgetspent_r(sp_file, result, buffer, buflen, &result) == 0) {
       DEBUG("Returning shadow entry %s\n", result->sp_namp);
     } else {
       if (errno == ENOENT) {
@@ -886,7 +889,7 @@ enum nss_status _nss_cache_getspnam_r(const char *name, struct spwd *result,
   }
   strncpy(sp_namp, name, strlen(name) + 1);
 
-  strncpy(filename, s_filename, NSS_CACHE_PATH_LENGTH - 1);
+  strncpy(filename, sp_filename, NSS_CACHE_PATH_LENGTH - 1);
   int n = strlen(filename);
   if (n > NSS_CACHE_PATH_LENGTH - 8) {
     DEBUG("filename too long\n");
@@ -896,7 +899,7 @@ enum nss_status _nss_cache_getspnam_r(const char *name, struct spwd *result,
   strncat(filename, ".ixname", NSS_CACHE_PATH_LENGTH - n - 1);
 
   args.sorted_filename = filename;
-  args.system_filename = s_filename;
+  args.system_filename = sp_filename;
   args.lookup_function = _nss_cache_spnam_wrap;
   args.lookup_value = sp_namp;
   args.lookup_result = result;
@@ -922,6 +925,191 @@ enum nss_status _nss_cache_getspnam_r(const char *name, struct spwd *result,
 
   free(sp_namp);
   _nss_cache_endspent_locked();
+  NSS_CACHE_UNLOCK();
+
+  return ret;
+}
+
+// _nss_cache_setsgent_path()
+// Helper function for testing
+
+extern char *_nss_cache_setsgent_path(const char *path) {
+  DEBUG("%s %s\n", "Setting sg_filename to", path);
+  return strncpy(sg_filename, path, NSS_CACHE_PATH_LENGTH - 1);
+}
+
+// _nss_cache_setsgent_locked()
+// Internal setup routine
+
+static enum nss_status _nss_cache_setsgent_locked(void) {
+  DEBUG("%s %s\n", "Opening", sg_filename);
+  sg_file = fopen(sg_filename, "r");
+
+  if (sg_file) {
+    return NSS_STATUS_SUCCESS;
+  } else {
+    return NSS_STATUS_UNAVAIL;
+  }
+}
+
+// _nss_cache_sgnam_wrap()
+// Internal wrapper for binary searches, using shadow-specific calls.
+
+static enum nss_cache_match _nss_cache_sgnam_wrap(FILE *file,
+                                                  struct nss_cache_args *args) {
+  struct sgrp *result = args->lookup_result;
+  char *name = args->lookup_value;
+  int ret;
+
+  if (fgetsgent_r(file, result, args->buffer, args->buflen, &result) == 0) {
+    ret = strcoll(result->sg_namp, name);
+    if (ret == 0) {
+      DEBUG("SUCCESS: found user %s\n", result->sg_namp);
+      return NSS_CACHE_EXACT;
+    }
+    DEBUG("Failed match at name %s\n", result->sg_namp);
+    if (ret > 0) {
+      return NSS_CACHE_HIGH;
+    } else {
+      return NSS_CACHE_LOW;
+    }
+  }
+
+  return NSS_CACHE_ERROR;
+}
+
+// _nss_cache_setsgent()
+// Called by NSS to open the shadow file
+// 'stayopen' parameter is ignored.
+
+enum nss_status _nss_cache_setsgent(int stayopen) {
+  enum nss_status ret;
+  NSS_CACHE_LOCK();
+  ret = _nss_cache_setsgent_locked();
+  NSS_CACHE_UNLOCK();
+  return ret;
+}
+
+// _nss_cache_endsgent_locked()
+// Internal close routine
+
+static enum nss_status _nss_cache_endsgent_locked(void) {
+  DEBUG("Closing gshadow.cache\n");
+  if (sg_file) {
+    fclose(sg_file);
+    sg_file = NULL;
+  }
+  return NSS_STATUS_SUCCESS;
+}
+
+// _nss_cache_endsgent()
+// Called by NSS to close the shadow file
+
+enum nss_status _nss_cache_endsgent(void) {
+  enum nss_status ret;
+  NSS_CACHE_LOCK();
+  ret = _nss_cache_endsgent_locked();
+  NSS_CACHE_UNLOCK();
+  return ret;
+}
+
+// _nss_cache_getsgent_r_locked()
+// Called internally to return the next entry from the shadow file
+
+static enum nss_status _nss_cache_getsgent_r_locked(struct sgrp *result,
+                                                    char *buffer, size_t buflen,
+                                                    int *errnop) {
+  enum nss_status ret = NSS_STATUS_SUCCESS;
+
+  if (sg_file == NULL) {
+    DEBUG("sg_file == NULL, going to setsgent\n");
+    ret = _nss_cache_setsgent_locked();
+  }
+
+  if (ret == NSS_STATUS_SUCCESS) {
+    if (fgetsgent_r(sg_file, result, buffer, buflen, &result) == 0) {
+      DEBUG("Returning gshadow entry %s\n", result->sg_namp);
+    } else {
+      if (errno == ENOENT) {
+        errno = 0;
+      }
+      *errnop = errno;
+      ret = _nss_cache_ent_bad_return_code(*errnop);
+    }
+  }
+
+  return ret;
+}
+
+// _nss_cache_getsgent_r()
+// Called by NSS to look up next entry in the shadow file
+
+enum nss_status _nss_cache_getsgent_r(struct sgrp *result, char *buffer,
+                                      size_t buflen, int *errnop) {
+  enum nss_status ret;
+  NSS_CACHE_LOCK();
+  ret = _nss_cache_getsgent_r_locked(result, buffer, buflen, errnop);
+  NSS_CACHE_UNLOCK();
+  return ret;
+}
+
+// _nss_cache_getsgnam_r()
+// Find a user by name
+
+enum nss_status _nss_cache_getsgnam_r(const char *name, struct sgrp *result,
+                                      char *buffer, size_t buflen,
+                                      int *errnop) {
+  char *sg_namp;
+  char filename[NSS_CACHE_PATH_LENGTH];
+  struct nss_cache_args args;
+  enum nss_status ret;
+
+  NSS_CACHE_LOCK();
+
+  // name is a const char, we need a non-const copy
+  sg_namp = malloc(strlen(name) + 1);
+  if (sg_namp == NULL) {
+    DEBUG("malloc error\n");
+    return NSS_STATUS_UNAVAIL;
+  }
+  strncpy(sg_namp, name, strlen(name) + 1);
+
+  strncpy(filename, sg_filename, NSS_CACHE_PATH_LENGTH - 1);
+  int n = strlen(filename);
+  if (n > NSS_CACHE_PATH_LENGTH - 8) {
+    DEBUG("filename too long\n");
+    free(sg_namp);
+    return NSS_STATUS_UNAVAIL;
+  }
+  strncat(filename, ".ixname", NSS_CACHE_PATH_LENGTH - n - 1);
+
+  args.sorted_filename = filename;
+  args.system_filename = sg_filename;
+  args.lookup_function = _nss_cache_sgnam_wrap;
+  args.lookup_value = sg_namp;
+  args.lookup_result = result;
+  args.buffer = buffer;
+  args.buflen = buflen;
+  args.lookup_key = sg_namp;
+  args.lookup_key_length = strlen(sg_namp);
+
+  DEBUG("Binary search for user %s\n", sg_namp);
+  ret = _nss_cache_bsearch2(&args, errnop);
+
+  if (ret == NSS_STATUS_UNAVAIL) {
+    DEBUG("Binary search failed, falling back to full linear search\n");
+    ret = _nss_cache_setsgent_locked();
+
+    if (ret == NSS_STATUS_SUCCESS) {
+      while ((ret = _nss_cache_getsgent_r_locked(
+                  result, buffer, buflen, errnop)) == NSS_STATUS_SUCCESS) {
+        if (!strcmp(result->sg_namp, name)) break;
+      }
+    }
+  }
+
+  free(sg_namp);
+  _nss_cache_endsgent_locked();
   NSS_CACHE_UNLOCK();
 
   return ret;

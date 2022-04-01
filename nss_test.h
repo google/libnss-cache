@@ -24,6 +24,7 @@
 
 #ifndef BSD
 #include <shadow.h>
+#include <gshadow.h>
 #endif  // ifndef BSD
 
 #ifndef NSS_TEST_H
@@ -33,6 +34,7 @@ const char *PASSWD_FILE = ".testdata/passwd.cache";
 const char *GROUP_FILE = ".testdata/group.cache";
 #ifndef BSD
 const char *SHADOW_FILE = ".testdata/shadow.cache";
+const char *GSHADOW_FILE = ".testdata/gshadow.cache";
 #endif  // ifndef BSD
 
 extern enum nss_status _nss_cache_getpwent_r(struct passwd *result,
@@ -58,6 +60,11 @@ extern enum nss_status _nss_cache_getspnam_r(const char *name,
                                              struct spwd *result, char *buffer,
                                              size_t buflen, int *errnop);
 extern enum nss_status _nss_cache_getspent_r(struct spwd *result, char *buffer,
+                                             size_t buflen, int *errnop);
+extern enum nss_status _nss_cache_getsgnam_r(const char *name,
+                                             struct sgrp *result, char *buffer,
+                                             size_t buflen, int *errnop);
+extern enum nss_status _nss_cache_getsgent_r(struct sgrp *result, char *buffer,
                                              size_t buflen, int *errnop);
 extern char *_nss_cache_setpwent_path(const char *path);
 #endif  // ifndef BSD

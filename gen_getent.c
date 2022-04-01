@@ -86,12 +86,12 @@ static int getgrent_to_file(FILE *output) {
               result.gr_gid);
       // unroll **gr_mem
       for (idx = 0; result.gr_mem[idx] != NULL; idx++) {
-        fprintf(output, "%s", result.gr_mem[idx]);
-        if (result.gr_mem[idx + 1] != NULL) {
-          fprintf(output, ",");
+        if (idx != 0) {
+          fputs(",", output);
         }
+        fputs(result.gr_mem[idx], output);
       }
-      fprintf(output, "\n");
+      fputs("\n", output);
     }
     if (ret == NSS_STATUS_TRYAGAIN) {
       buflen = buflen * 2;
@@ -134,37 +134,37 @@ static int getspent_to_file(FILE *output) {
       if (result.sp_lstchg != -1) {
         fprintf(output, "%ld:", result.sp_lstchg);
       } else {
-        fprintf(output, ":");
+        fputs(":", output);
       }
       if (result.sp_min != -1) {
         fprintf(output, "%ld:", result.sp_min);
       } else {
-        fprintf(output, ":");
+        fputs(":", output);
       }
       if (result.sp_max != -1) {
         fprintf(output, "%ld:", result.sp_max);
       } else {
-        fprintf(output, ":");
+        fputs(":", output);
       }
       if (result.sp_warn != -1) {
         fprintf(output, "%ld:", result.sp_warn);
       } else {
-        fprintf(output, ":");
+        fputs(":", output);
       }
       if (result.sp_inact != -1) {
         fprintf(output, "%ld:", result.sp_inact);
       } else {
-        fprintf(output, ":");
+        fputs(":", output);
       }
       if (result.sp_expire != -1) {
         fprintf(output, "%ld:", result.sp_expire);
       } else {
-        fprintf(output, ":");
+        fputs(":", output);
       }
       if (result.sp_flag != -1) {
         fprintf(output, "%ld", result.sp_flag);
       }
-      fprintf(output, "\n");
+      fputs("\n", output);
     }
     if (ret == NSS_STATUS_TRYAGAIN) {
       buflen = buflen * 2;
@@ -172,6 +172,59 @@ static int getspent_to_file(FILE *output) {
     }
     if (ret == NSS_STATUS_UNAVAIL) {
       perror("ERROR: failed to access shadow test data");
+      free(buffer);
+      return 1;
+    }
+  } while (ret == NSS_STATUS_SUCCESS || ret == NSS_STATUS_TRYAGAIN);
+
+  free(buffer);
+
+  return 0;
+}
+
+// getsgent_to_file()
+// Call the nss_cache getsgent function to dump the shadow store to a
+// file.
+
+static int getsgent_to_file(FILE *output) {
+  struct sgrp result;
+  char *buffer;
+  size_t buflen = 1024;
+  int errnop;
+  enum nss_status ret;
+  int idx;
+
+  _nss_cache_setsgent_path(GSHADOW_FILE);
+
+  buffer = malloc(buflen);
+
+  do {
+    ret = _nss_cache_getsgent_r(&result, buffer, buflen, &errnop);
+    if (ret == NSS_STATUS_SUCCESS) {
+      fprintf(output, "%s:%s:", result.sg_namp, result.sg_passwd);
+      // unroll **sg_adm
+      for (idx = 0; result.sg_adm[idx] != NULL; idx++) {
+        if (idx != 0) {
+          fputs(",", output);
+        }
+        fputs(result.sg_adm[idx], output);
+      }
+      fputs(":", output);
+      // unroll **sg_mem
+      for (idx = 0; result.sg_mem[idx] != NULL; idx++) {
+        if (idx != 0) {
+          fputs(",", output);
+        }
+        fputs(result.sg_mem[idx], output);
+      }
+      fputs("\n", output);
+    }
+    if (ret == NSS_STATUS_TRYAGAIN) {
+      buflen = buflen * 2;
+      buffer = realloc(buffer, buflen);
+    }
+    if (ret == NSS_STATUS_UNAVAIL) {
+      perror("ERROR: failed to access gshadow test data");
       free(buffer);
       return 1;
     }
@@ -258,6 +311,31 @@ static int gen_getspent_data(void) {
 
   return ret;
 }
+
+// gen_getsgent_data()
+//
+// creates a copy of the shadow map as read by nss_cache.c
+
+static int gen_getsgent_data(void) {
+  char filename[NSS_CACHE_PATH_LENGTH];
+  FILE *output;
+  int ret;
+
+  strncpy(filename, GSHADOW_FILE, NSS_CACHE_PATH_LENGTH - 4);
+  int n = strlen(filename);
+  strncat(filename, ".out", NSS_CACHE_PATH_LENGTH - n - 1);
+  output = fopen(filename, "w");
+
+  if (output == NULL) {
+    fprintf(stderr, "failed to open %s!\n", filename);
+    return 255;
+  }
+
+  ret = getsgent_to_file(output);
+  fclose(output);
+
+  return ret;
+}
 #endif  // ifndef BSD
 
 // main()
@@ -277,14 +355,20 @@ int main(void) {
 
   ret = gen_getgrent_data();
   if (ret != 0) {
-    fprintf(stderr, "Failed to generate password file.\n");
+    fprintf(stderr, "Failed to generate group file.\n");
     failed_tests = failed_tests + 1;
   }
 
 #ifndef BSD
   ret = gen_getspent_data();
   if (ret != 0) {
-    fprintf(stderr, "Failed to generate password file.\n");
+    fprintf(stderr, "Failed to generate shadow file.\n");
+    failed_tests = failed_tests + 1;
+  }
+
+  ret = gen_getsgent_data();
+  if (ret != 0) {
+    fprintf(stderr, "Failed to generate gshadow file.\n");
     failed_tests = failed_tests + 1;
   }
 #endif

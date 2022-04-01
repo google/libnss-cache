@@ -31,6 +31,7 @@
 
 #ifndef BSD
 #include <shadow.h>
+#include <gshadow.h>
 #endif /* ifndef BSD */
 
 #ifndef NSS_CACHE_H
@@ -53,6 +54,7 @@ extern char *_nss_cache_setpwent_path(const char *path);
 extern char *_nss_cache_setgrent_path(const char *path);
 #ifndef BSD
 extern char *_nss_cache_setspent_path(const char *path);
+extern char *_nss_cache_setsgent_path(const char *path);
 #endif /* ifndef BSD */
 
 enum nss_cache_match {
