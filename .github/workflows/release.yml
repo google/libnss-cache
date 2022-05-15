@@ -1,7 +1,7 @@
 name: release
 
 on:
-  # Test that the workflow parses on PR
+  # Test that this workflow parses on PR
   pull_request:
   push:
     tags:
