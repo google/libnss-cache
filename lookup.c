@@ -243,6 +243,46 @@ static int getspnam_wrapper(char *name) {
 
   return found;
 }
+
+// getsgnam_wrapper()
+//
+// perform a getsgnam() lookup via nss_cache.c directly
+
+static int getsgnam_wrapper(char *name) {
+  struct sgrp result;
+  char *buffer = NULL;
+  size_t buflen = 1024;
+  int found = 255;
+  int errnop;
+  int ret;
+
+  _nss_cache_setsgent_path(GSHADOW_FILE);
+
+  buffer = malloc(buflen);
+
+  do {
+    ret = _nss_cache_getsgnam_r(name, &result, buffer, buflen, &errnop);
+    if (ret == NSS_STATUS_SUCCESS) {
+      // printf("found %s, %s\n", result.sg_namp, result.sg_pwdp);
+      found = 0;
+    }
+    if (ret == NSS_STATUS_NOTFOUND) {
+      found = 1;
+    }
+    if (ret == NSS_STATUS_TRYAGAIN) {
+      buflen = buflen * 2;
+      buffer = realloc(buffer, buflen);
+    }
+    if (ret == NSS_STATUS_UNAVAIL) {
+      fprintf(stderr, "ERROR: failed to access passwd test data\n");
+      return 2;
+    }
+  } while (ret == NSS_STATUS_TRYAGAIN);
+
+  free(buffer);
+
+  return found;
+}
 #endif  // ifndef BSD
 
 // lookup_getpwnam()
@@ -395,6 +435,36 @@ static int lookup_getspnam(FILE *input) {
 
   return ret;
 }
+
+// lookup_getsgnam()
+//
+// call getsgnam() from nss_cache.c on each line of a file
+
+static int lookup_getsgnam(FILE *input) {
+  int lines = 0;
+  char line[255];
+  int ret;
+
+  while (fgets(line, sizeof(line), input)) {
+    lines += 1;
+    // strip trailing newline
+    if (line[strlen(line) - 1] == '\n') {
+      line[strlen(line) - 1] = '\0';
+    }
+    ret = getsgnam_wrapper(line);
+    if (ret != 0) {
+      break;
+    }
+  }
+
+  if (ret == 0) {
+    printf("successfully completed %d lookups\n", lines);
+  } else {
+    fprintf(stderr, "failed at line %d: %s\n", lines, line);
+  }
+
+  return ret;
+}
 #endif  // ifndef BSD
 
 // nss_lookup()
@@ -415,6 +485,8 @@ static int nss_lookup(char *call, FILE *input) {
 #ifndef BSD
   } else if (strncmp(call, "getspnam", 8) == 0) {
     ret = lookup_getspnam(input);
+  } else if (strncmp(call, "getsgnam", 8) == 0) {
+    ret = lookup_getsgnam(input);
 #endif  // ifndef BSD
   } else {
     fprintf(stderr, "unknown nss function: %s\n", call);
