@@ -23,8 +23,8 @@
 #include <unistd.h>
 
 #ifndef BSD
-#include <shadow.h>
 #include <gshadow.h>
+#include <shadow.h>
 #endif  // ifndef BSD
 
 #ifndef NSS_TEST_H
