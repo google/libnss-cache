@@ -22,8 +22,8 @@
 
 #include "nss_cache.h"
 
-#include <sys/mman.h>
 #include <stdio.h>
+#include <sys/mman.h>
 
 /* Locking implementation: use pthreads. */
 #include <pthread.h>
