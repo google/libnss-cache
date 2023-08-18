@@ -20,13 +20,10 @@ INDEX_DATA_TOUCH = $(TESTDATA)/.touch.index_data
 .PHONY: all
 all: $(LIBRARY)
 
-.PHONY: test
-test: test_getent time_lookups
-
-.PHONY: check
-check: CFLAGS += -O0 -g --coverage
-check: LDFLAGS += --coverage
-check: test_getent time_lookups
+.PHONY: test check
+test check: CFLAGS += -O0 -g --coverage
+test check: LDFLAGS += --coverage
+test check: test_getent time_lookups
 
 lookup: lookup.o $(LIBNSSCACHE)
 
