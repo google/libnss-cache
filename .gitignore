@@ -30,3 +30,5 @@ debian/debhelper-build-stamp
 /libnss_cache.so
 /*.c.gcov
 /build/
+*.gcda
+*.gcno
