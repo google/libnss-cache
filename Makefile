@@ -1,11 +1,9 @@
 CC ?= gcc
 CFLAGS ?= -Wall -Wstrict-prototypes
 CFLAGS += -fPIC
-LIBRARY=libnss_cache.so
+LIBRARY=libnss_cache.so.2
 PREFIX=$(DESTDIR)/usr
 LIBDIR=$(PREFIX)/lib
-SONAME=libnss_cache.so.2
-LD_SONAME=-Wl,-soname,$(SONAME)
 TESTDATA=.testdata
 
 LIBNSSCACHE = nss_cache.o compat/getpwent_r.o compat/getgrent_r.o
@@ -119,24 +117,18 @@ $(GETENT_DATA_TOUCH): scripts/gentestdata.sh
 
 last_pw_errno_test: test/last_pw_errno_test.c
 
-$(LIBRARY): LDFLAGS += -shared $(LD_SONAME)
+$(LIBRARY): LDFLAGS += -shared
 $(LIBRARY): $(LIBNSSCACHE)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $(LIBRARY) $+
 
-$(SONAME): $(LIBRARY)
-	ln -sf $(LIBRARY) $(SONAME)
-	ln -sf $(LIBRARY) $(SONAME).0
-
 .PHONY: install
-install: $(SONAME)
+install: $(LIBRARY)
 	install -d $(LIBDIR)
 	install $(LIBRARY) $(LIBDIR)
-	install $(SONAME) $(LIBDIR)
-	install $(SONAME).0 $(LIBDIR)
 
 .PHONY: clean
 clean:
-	rm -f $(LIBRARY)* *.o compat/*.o *.gcov *.gcda *.gcno compat/*.gcda compat/*.gcno lookup gen_getent last_pw_errno_test
+	rm -f $(LIBRARY) *.o compat/*.o *.gcov *.gcda *.gcno compat/*.gcda compat/*.gcno lookup gen_getent last_pw_errno_test
 
 .PHONY: veryclean
 veryclean: clean
