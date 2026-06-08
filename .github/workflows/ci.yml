@@ -27,7 +27,7 @@ jobs:
         run: make all
       - name: test
         run: make check
-      - uses: codecov/codecov-action@v6
+      - uses: codecov/codecov-action@v7
         if: always()
         with:
           directory: .
