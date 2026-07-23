@@ -164,6 +164,7 @@ enum nss_status _nss_cache_bsearch2(struct nss_cache_args *args, int *errnop) {
 
   if (fseek(system_file_stream, offset, SEEK_SET) != 0) {
     DEBUG("fseek fail\n");
+    fclose(system_file_stream);
     return NSS_STATUS_UNAVAIL;
   }
 
@@ -253,8 +254,12 @@ static enum nss_cache_match _nss_cache_pwnam_wrap(FILE *file,
 // Internal setup routine
 
 static enum nss_status _nss_cache_setpwent_locked(void) {
-  DEBUG("%s %s\n", "Opening", pw_filename);
-  pw_file = fopen(pw_filename, "r");
+  if (pw_file == NULL) {
+    DEBUG("%s %s\n", "Opening", pw_filename);
+    pw_file = fopen(pw_filename, "r");
+  } else {
+    rewind(pw_file);
+  }
 
   if (pw_file) {
     return NSS_STATUS_SUCCESS;
@@ -468,8 +473,12 @@ extern char *_nss_cache_setgrent_path(const char *path) {
 // Internal setup routine
 
 static enum nss_status _nss_cache_setgrent_locked(void) {
-  DEBUG("%s %s\n", "Opening", gr_filename);
-  gr_file = fopen(gr_filename, "r");
+  if (gr_file == NULL) {
+    DEBUG("%s %s\n", "Opening", gr_filename);
+    gr_file = fopen(gr_filename, "r");
+  } else {
+    rewind(gr_file);
+  }
 
   if (gr_file) {
     return NSS_STATUS_SUCCESS;
@@ -757,8 +766,12 @@ extern char *_nss_cache_setspent_path(const char *path) {
 // Internal setup routine
 
 static enum nss_status _nss_cache_setspent_locked(void) {
-  DEBUG("%s %s\n", "Opening", sp_filename);
-  sp_file = fopen(sp_filename, "r");
+  if (sp_file == NULL) {
+    DEBUG("%s %s\n", "Opening", sp_filename);
+    sp_file = fopen(sp_filename, "r");
+  } else {
+    rewind(sp_file);
+  }
 
   if (sp_file) {
     return NSS_STATUS_SUCCESS;
@@ -942,8 +955,12 @@ extern char *_nss_cache_setsgent_path(const char *path) {
 // Internal setup routine
 
 static enum nss_status _nss_cache_setsgent_locked(void) {
-  DEBUG("%s %s\n", "Opening", sg_filename);
-  sg_file = fopen(sg_filename, "r");
+  if (sg_file == NULL) {
+    DEBUG("%s %s\n", "Opening", sg_filename);
+    sg_file = fopen(sg_filename, "r");
+  } else {
+    rewind(sg_file);
+  }
 
   if (sg_file) {
     return NSS_STATUS_SUCCESS;
