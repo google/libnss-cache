@@ -49,7 +49,7 @@ time_lookups: lookup_data index_data lookup
 	rm -f $(TESTDATA)/group.cache.ixgid
 	time -f %E ./lookup -c getgrgid -f $(TESTDATA)/rand_grgids
 	@echo Binary GID lookups
-	ln -sf group_cache_ixuid_disabled $(TESTDATA)/group.cache.ixuid
+	ln -sf group_cache_ixgid_disabled $(TESTDATA)/group.cache.ixgid
 	time -f %E ./lookup -c getgrgid -f $(TESTDATA)/rand_grgids
 	@echo Linear shadow lookups
 	rm -f $(TESTDATA)/shadow.cache.ixname
