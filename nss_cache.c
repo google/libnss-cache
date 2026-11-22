@@ -746,6 +746,108 @@ enum nss_status _nss_cache_getgrnam_r(const char *name, struct group *result,
   return ret;
 }
 
+// _nss_cache_initgroups_dyn()
+// Find the supplementary groups for a user.
+
+#define NSS_CACHE_INITGROUPS_BUFLEN (1 << 20)
+
+enum nss_status _nss_cache_initgroups_dyn(const char *user, gid_t group,
+                                          long int *start, long int *size,
+                                          gid_t **groupsp, long int limit,
+                                          int *errnop) {
+  char *buffer;
+  size_t buflen = NSS_CACHE_INITGROUPS_BUFLEN;
+  enum nss_status ret;
+  int any = 0;
+
+  buffer = malloc(buflen);
+  if (buffer == NULL) {
+    *errnop = ENOMEM;
+    return NSS_STATUS_TRYAGAIN;
+  }
+
+  NSS_CACHE_LOCK();
+  ret = _nss_cache_setgrent_locked();
+  if (ret != NSS_STATUS_SUCCESS) {
+    *errnop = errno;
+  }
+
+  while (ret == NSS_STATUS_SUCCESS) {
+    struct group result;
+    char **member;
+
+    ret = _nss_cache_getgrent_r_locked(&result, buffer, buflen, errnop);
+    if (ret == NSS_STATUS_TRYAGAIN && *errnop == ERANGE) {
+      free(buffer);
+      buflen *= 2;
+      buffer = malloc(buflen);
+      if (buffer == NULL) {
+        *errnop = ENOMEM;
+        ret = NSS_STATUS_TRYAGAIN;
+        break;
+      }
+      ret = NSS_STATUS_SUCCESS;
+      continue;
+    }
+    if (ret != NSS_STATUS_SUCCESS) {
+      break;
+    }
+
+    // The caller has already included the primary group.
+    if (result.gr_gid == group) {
+      continue;
+    }
+
+    for (member = result.gr_mem; *member != NULL; member++) {
+      if (strcmp(*member, user) == 0) {
+        gid_t *groups = *groupsp;
+
+        if (*start == *size) {
+          gid_t *newgroups;
+          long int newsize;
+
+          if (limit > 0 && *size == limit) {
+            goto out;
+          }
+
+          if (limit <= 0)
+            newsize = 2 * *size;
+          else
+            newsize = MIN(limit, 2 * *size);
+
+          newgroups = realloc(groups, newsize * sizeof(*groups));
+          if (newgroups == NULL) {
+            *errnop = ENOMEM;
+            ret = NSS_STATUS_TRYAGAIN;
+            goto out;
+          }
+          *groupsp = groups = newgroups;
+          *size = newsize;
+        }
+
+        groups[*start] = result.gr_gid;
+        *start += 1;
+        any = 1;
+        break;
+      }
+    }
+  }
+
+  if (ret == NSS_STATUS_NOTFOUND) {
+    ret = NSS_STATUS_SUCCESS;
+  }
+
+out:
+  _nss_cache_endgrent_locked();
+  NSS_CACHE_UNLOCK();
+  free(buffer);
+
+  if (ret == NSS_STATUS_SUCCESS && !any) {
+    ret = NSS_STATUS_NOTFOUND;
+  }
+  return ret;
+}
+
 //
 //  Routines for shadow map defined here.
 //
